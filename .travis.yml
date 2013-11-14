@@ -1,9 +1,6 @@
 language: python
 python:
-    - "2.6"
     - "2.7"
-#    - "3.3"
-#    - "pypy"
 
 before_install:
      - git submodule update --init --recursive
@@ -51,6 +48,3 @@ notifications:
     on_success: change
     on_failure: always
 env:
-
-services:
-#    - redis-server
