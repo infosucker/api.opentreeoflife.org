@@ -9,7 +9,7 @@ class OtolTest(object):
         self.host     = host;
         self.port     = str(port);
         self.protocol = protocol;
-        prefix        = "/welcome/default/api"
+        prefix        = "/api/default/v1"
         self.base_url = protocol + host + ":" + port + prefix;
 
 def test_basic_api_get():
