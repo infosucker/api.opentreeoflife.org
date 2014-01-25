@@ -140,46 +140,154 @@ def create_validation_nexson(obj, warning_codes_to_skip, retain_deprecated=True)
     n = NexSON(obj, v)
     return v, n
 
+def create_annotation_blob(ann_event, agent, messages):
+    '''Returns a JSON-serializable blob that could be inserted into a study-level meta object
+    if messages are being put into that location. (this is not the recommended place for new
+    annotations)
+    '''
+    return [{
+                '@property': 'ot:annotationEvents',
+                '@xsi:type': 'nex:ResourceMeta',
+                'annotation': [
+                    ann_event
+                ],
+            }, {
+                '@property': 'ot:agents',
+                '@xsi:type': 'nex:ResourceMeta',
+                'agent': [
+                    agent
+                ],
+            }, {
+                '@property': 'ot:messages',
+                '@xsi:type': 'nex:ResourceMeta',
+                'message': messages,
+            },
+    ]
 
-def add_or_replace_annotation(obj, annotation):
-    '''Takes a nexson object `obj` and an `annotation` dictionary which is 
-    expected to have a string as the value of annotation['author']['name']
+def append_messages_to_obj(obj, message_list, meta=None, ot_messages=None):
+    if not message_list:
+        return
+    if ot_messages is None:
+        ot_messages = {
+            '@property': 'ot:messages',
+            '@xsi:type': 'nex:ResourceMeta',
+            'message': [],
+            }
+        if meta is None:
+            if isinstance(obj, list):
+                meta = obj
+            else:
+                meta = obj.setdefault('meta', [])
+            if not isinstance(meta, list):
+                meta = [meta]
+                obj['meta'] = meta
+        meta.append(ot_messages)
+    ot_messages['message'].extend(message_list)
+
+def finalize_message_list(message_list):
+    for m in message_list:
+        embed_refers_to_in_message(m)
+
+def embed_refers_to_in_message(m):
+    try:
+        address = m[' _address'] #@TEMP hack
+        del m[' _address'] #@TEMP hack
+        m['refersTo'] = convert_dict_to_badgerfish_att_dict(address.path)
+    except:
+        pass
+
+def _add_value_to_dict(d, k, v):
+    '''Adds the `k`->`v` mapping to `d`, but if a previous element exists it changes
+    the value of for the key to list. 
+    This is a simple multi-dict that is only suitable when you know that you'll never
+    store a list or `None` as a value in the dict.
+    '''
+    prev = d.get(k)
+    if prev is None:
+        d[k] = v
+    elif isinstance(prev, list):
+        prev.append(v)
+    else:
+        d[k] = [prev, v]
+
+def add_or_replace_annotation(obj, annotation_event, agent, message_list, rich_logger):
+    '''Takes a nexson object `obj` and an annotation_event, agent, message_list as 
+        created by prepare_annotation
+
     This function will remove all annotations from obj that:
-        1. have the same author/name, and
+        1. were produced by the same agent (based on agent['@id'], and
         2. have no messages that are flagged as messages to be preserved (values for 'preserve' that evaluate to true)
     '''
-    script_name = annotation['author']['name']
-    n = obj['nexml']
-    former_meta = n.setdefault('meta', [])
+    id2obj = None
+    if rich_logger:
+        id2obj = rich_logger.id2obj
+    nexml_obj = obj['nexml']
+    former_meta = nexml_obj.setdefault('meta', [])
     if not isinstance(former_meta, list):
         former_meta = [former_meta]
-        n['meta'] = former_meta
-    else:
-        indices_to_pop = []
-        for annotation_ind, el in enumerate(former_meta):
+        nexml_obj['meta'] = former_meta
+    event_ids_to_remove = []
+    need_to_add_agent_meta = True
+    matching_agent_id = agent['@id']
+    ot_annotation_events = None
+    ot_agents = None
+    ot_messages = None
+    for meta_el in former_meta:
+        p = meta_el.get('@property', '')
+        if p == 'ot:messages':
+            ot_messages = meta_el
+        elif p == 'ot:agents':
+            ot_agents = meta_el
             try:
-                if (el.get('$') == annotation_label) and (el.get('author',{}).get('name') == script_name):
-                    m_list = el.get('messages', [])
-                    to_retain = []
-                    for m in m_list:
-                        if m.get('preserve'):
-                            to_retain.append(m)
-                    if len(to_retain) == 0:
-                        indices_to_pop.append(annotation_ind)
-                    elif len(to_retain) < len(m_list):
-                        el['messages'] = to_retain
-                        el['dateModified'] = datetime.datetime.utcnow().isoformat()
+                if meta_el['agent']['@id'] == matching_agent_id:
+                    need_to_add_agent_meta = False
+            except:
+                pass
+        if p != 'ot:annotationEvents':
+            continue
+        ot_annotation_events = meta_el
+        indices_to_pop = []
+        annotation_list = meta_el.get('annotation', [])
+        for ai, el in enumerate(annotation_list):
+            try:
+                if el.get('@wasAssociatedWithAgentId') == agent['@id']:
+                    event_ids_to_remove.append(el['@id'])
+                    indices_to_pop.append(ai)
             except:
                 # different annotation structures could yield IndexErrors or other exceptions.
                 # these are not the annotations that you are looking for....
                 pass
-
         if len(indices_to_pop) > 0:
             # walk backwards so pops won't change the meaning of stored indices
             for annotation_ind in indices_to_pop[-1::-1]:
-                former_meta.pop(annotation_ind)
-    former_meta.append(annotation)
-
+                annotation_list.pop(annotation_ind)
+    if ot_annotation_events is None:
+        ot_annotation_events = {
+            "@property": "ot:annotationEvents", 
+            "@xsi:type": "nex:ResourceMeta", 
+            "annotation": [],
+            }
+        former_meta.append(ot_annotation_events)
+    ot_annotation_events['annotation'].append(annotation_event)
+    if need_to_add_agent_meta:
+        if ot_agents is None:
+            ot_agents = {
+                "@property": "ot:agents", 
+                "@xsi:type": "nex:ResourceMeta", 
+                "agent": [],
+                }
+            former_meta.append(ot_agents)
+        ot_agents['agent'].append(agent)
+    for m in message_list:
+        sub_m_list = [m]
+        #print sub_m_list
+        address = m[' _address'] #@TEMP hack
+        del m[' _address'] #@TEMP hack
+        target = find_target_of_nexpath(nexml_obj, address, id2obj)
+        append_messages_to_obj(target, sub_m_list)
+    
+        #append_messages_to_obj(nexml_obj, message_list, meta=former_meta, ot_messages=ot_messages)
+    
 def prepare_annotation(validation_logger, 
                        author_name='',
                        invocation=tuple(),
@@ -188,6 +296,8 @@ def prepare_annotation(validation_logger,
                        url='https://github.com/OpenTreeOfLife/api.opentreeoflife.org',
                        description="validator of NexSON constraints as well as constraints that would allow a study to be imported into the Open Tree of Life's phylogenetic synthesis tools"
                        ):
+    '''Returns AnnotationEvent object, Agent object, and list of message objects.
+    ''' 
     checks_performed = list(WarningCodes.numeric_codes_registered)
     for code in validation_logger.codes_to_skip:
         try:
@@ -196,39 +306,53 @@ def prepare_annotation(validation_logger,
             pass
     checks_performed = [WarningCodes.facets[i] for i in checks_performed]
     nuuid = 'meta-' + str(uuid.uuid1())
-    annotation = {
-        '@property': 'ot:annotation',
-        '$': annotation_label,
-        '@xsi:type': 'nex:ResourceMeta',
-        'author': {
-            'name': author_name, 
-            'url': url, 
-            'description': description,
-            'version': author_version,
-            'invocation': {
-                'commandLine': invocation,
-                'checksPerformed': checks_performed,
-                'pythonVersion' : platform.python_version(),
-                'pythonImplementation' : platform.python_implementation(),
+    agent_id = author_name #@TODO should verify uniqueness of this ID...
+    annotation_event = {
+        '@id': nuuid,
+        '@description': description,
+        '@wasAssociatedWithAgentId': agent_id,
+        '@dateCreated': datetime.datetime.utcnow().isoformat(),
+        '@passedChecks': (len(validation_logger.errors) == 0) and (len(validation_logger.warnings) == 0),
+        '@preserve': False,
+        }
+    agent = {
+        '@id': agent_id,
+        '@name': author_name,
+        '@url': url,
+        '@description': description,
+        '@version': author_version,
+        'invocation': {
+            'commandLine': [{'$' : i } for i in invocation],
+            'checksPerformed': [{'$' : i } for i in checks_performed],
+            'otherProperty' : [
+                {
+                    'name': 'pythonVersion',
+                    'value': 'STRING',
+                    '$': platform.python_version(),
+                },
+                {
+                    'name': 'pythonImplementation',
+                    'value': 'STRING',
+                    '$': platform.python_implementation(),
+                },
+                ]
             }
-        },
-        'dateCreated': datetime.datetime.utcnow().isoformat(),
-        'id': nuuid,
-        'messages': [],
-        'isValid': (len(validation_logger.errors) == 0) and (len(validation_logger.warnings) == 0),
-    }
-    message_list = annotation['messages']
+        }
+    message_list = []
     for m in validation_logger.errors:
-        d = m.as_dict()
-        d['severity'] = 'ERROR'
-        d['preserve'] = False
+        d = m.as_badgerfish()
+        d['@severity'] = 'ERROR'
         message_list.append(d)
     for m in validation_logger.warnings:
-        d = m.as_dict()
-        d['severity'] = 'WARNING'
-        d['preserve'] = False
+        d = m.as_badgerfish()
+        d['@severity'] = 'WARNING'
         message_list.append(d)
-    return annotation
+    for message_count, d in enumerate(message_list):
+        d['@preserve'] = False
+        d['@wasGeneratedById'] = nuuid
+        d['@id'] = '{p}m{i:d}'.format(p=nuuid, i=message_count)
+        
+    return annotation_event, agent, message_list
 
 class NexSONError(Exception):
     def __init__(self, v):
@@ -325,6 +449,85 @@ class NexsonAddress(object):
             out.write(' in "{el}"'.format(el=self._container.get_tag_context()))
         out.write('\n')
 
+def find_target_of_nexpath(d, nexson_address, id2obj):
+    '''Finds the object referred to by nexson_address.
+    Assumes that `d` is the top level (nexml object) and
+    id2obj is a dictionary mapping any object nexson id to that object.
+    '''
+    p = nexson_address.path
+    t = p['top']
+    el = None
+    is_meta = False
+    if t == 'meta':
+        annotation_id = p.get('annotationID')
+        if annotation_id:
+            el = id2obj[annotation_id]
+        else:
+            message_id = p.get('messageID')
+            if message_id:
+                el = id2obj[message_id]
+            else:
+                meta_id = p.get('metaID')
+                if meta_id:
+                    el = id2obj[metaID]
+                else:
+                    el = d['meta']
+                    is_meta = True
+    elif t == 'otus':
+        otu_id = p.get('otuID')
+        if otu_id is not None:
+            el = id2obj[otu_id]
+        else:
+            otus_id = p['otusID']
+            el = id2obj[otus_id]
+    elif t == 'trees':
+        edge_id = p.get('edgeID')
+        if edge_id is not None:
+            el = id2obj[edge_id]
+        else:
+            node_id = p.get('nodeID')
+            if node_id is not None:
+                el = id2obj[node_id]
+            else:
+                tree_id = p.get('treeID')
+                if tree_id is not None:
+                    el = id2obj[tree_id]
+                else:
+                    trees_id = p['treesID']
+                    el = id2obj[trees_id]
+    else:
+        assert t in ['meta', 'otus', 'trees']
+    if p.get('inMeta'):
+        prop = p['property']
+        assert(el is not None)
+        found = False
+        if not is_meta:
+            mel = el['meta']
+            for e in mel:
+                if e['@property'] == prop:
+                    found = True
+                    el = e
+                    break
+            assert found
+    return el
+
+def convert_dict_to_badgerfish_dict(d):
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            out[k] = convert_dict_to_badgerfish_dict(v)
+        else:
+            out[k] = {'$': v}
+    return out
+
+def convert_dict_to_badgerfish_att_dict(d):
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            out[k] = convert_dict_to_badgerfish_dict(v)
+        else:
+            out['@' + k] = v
+    return out
 
 ################################################################################
 # In a burst of over-exuberant OO-coding, MTH added a class for 
@@ -366,13 +569,29 @@ class WarningMessage(object):
     def getvalue(self, prefix=''):
         return self.__unicode__(prefix=prefix)
     def as_dict(self):
-        return {
+        d = {
             'severity': SeverityCodes.facets[self.severity],
             'code': WarningCodes.facets[self.warning_code],
-            'comment': self.__unicode__(),
-            'data': self.convert_data_for_json(),
+            'humanMessage': self.__unicode__(),
             'refersTo': self.address.path
         }
+        dd = self.convert_data_for_json(),
+        if dd:
+            d['data'] = dd
+        return d
+    def as_badgerfish(self):
+        '''Hiding a ' _address' attribute in this object so that refersTo or the obj
+        can be used later #@TEMP hack.'''
+        return {
+            '@severity': SeverityCodes.facets[self.severity],
+            '@code': WarningCodes.facets[self.warning_code],
+            '@humanMessage': self.__unicode__(),
+            ' _address': self.address #@TEMP hack
+        }
+        dd = self.convert_data_for_json(),
+        if dd:
+            d['data'] = convert_dict_to_badgerfish_dict(dd)
+        return d
     def convert_data_for_json(self):
         wc = self.warning_code
         data = self.warning_data
@@ -704,6 +923,9 @@ class DefaultRichLogger(object):
         self.errors = []
         self.prefix = ''
         self.retain_deprecated = False
+        self.id2obj = {}
+        self.annotation_event_ids_to_store = []
+        self.flagged_messages = {} # id to (message obj., parent of meta)
     def warn(self, warning_code, data, address):
         m = WarningMessage(warning_code, data, address, severity=SeverityCodes.WARNING)
         self.warning(m)
@@ -803,6 +1025,12 @@ class NexsonDictWrapper(object):
             self._logger = DefaultRichLogger()
         else:
             self._logger = rich_logger
+    def setdefault(self, k, v):
+        try:
+            return getattr(self, k)
+        except:
+            setattr(self, k, v)
+            return v
     def get_path_dict(self, subelement, property_name):
         assert False
     def get_nexson_id(self):
@@ -844,6 +1072,45 @@ class NexsonDictWrapper(object):
             for k, v in mv.iteritems():
                 if k not in expected_keys:
                     rich_logger.warning(UnvalidatedAnnotationWarning(v, self.address_of_meta_key(k)))
+        if rich_logger is not None and rich_logger.id2obj is not None:
+            id2obj = rich_logger.id2obj
+            annotation_events = mv.get('ot:annotationEvents')
+            if annotation_events:
+                try:
+                    for e in annotation_events['annotation']:
+                        try:
+                            _add_value_to_dict(id2obj, e['@id'], e)
+                        except:
+                            pass
+                except:
+                    pass
+            agents = mv.get('ot:agents')
+            if agents:
+                try:
+                    for e in agents['agent']:
+                        try:
+                            _add_value_to_dict(id2obj, e['@id'], e)
+                        except:
+                            pass
+                except:
+                    pass
+            messages = mv.get('ot:messages')
+            if messages:
+                try:
+                    for e in messages['message']:
+                        try:
+                            _add_value_to_dict(id2obj, e['@id'], e)
+                        except:
+                            pass
+                        if rich_logger.annotation_event_ids_to_store \
+                          and e.get('@wasGeneratedById') in rich_logger.annotation_event_ids_to_store:
+                            try:
+                                _add_value_to_dict(rich_logger.flagged_messages, e['@id'], (e, self))
+                            except:
+                                pass
+                except:
+                    pass
+
     def get_singelton_meta(self, property_name, default=None, warn_if_missing=True):
         v = self._meta2value.get(property_name)
         if v is None:
@@ -897,6 +1164,8 @@ class NexsonDictWrapper(object):
         '''calls check_key_presence and _consume_meta
         '''
         check_key_presence(d, self, rich_logger)
+        if rich_logger and (rich_logger.id2obj is not None) and '@id' in self.PERMISSIBLE_KEYS and '@id' in d:
+            _add_value_to_dict(rich_logger.id2obj, d['@id'], d)
         self._consume_meta(d, rich_logger, self.EXPECTED_META_KEYS)
 
 class MetaValueList(list):

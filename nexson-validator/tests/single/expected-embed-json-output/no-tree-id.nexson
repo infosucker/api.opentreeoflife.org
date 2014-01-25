@@ -8,191 +8,195 @@
 "@xsi:type": "nex:LiteralMeta"
 }, 
 {
-"$": "Open Tree NexSON validation", 
-"@property": "ot:annotation", 
+"@property": "ot:annotationEvents", 
 "@xsi:type": "nex:ResourceMeta", 
-"author": {
-"description": "validator of NexSON constraints as well as constraints that would allow a study to be imported into the Open Tree of Life's phylogenetic synthesis tools", 
+"annotation": [
+{
+"@description": "validator of NexSON constraints as well as constraints that would allow a study to be imported into the Open Tree of Life's phylogenetic synthesis tools", 
+"@passedChecks": false, 
+"@preserve": false, 
+"@wasAssociatedWithAgentId": "normalize_ot_nexson.py"
+}
+]
+}, 
+{
+"@property": "ot:agents", 
+"@xsi:type": "nex:ResourceMeta", 
+"agent": [
+{
+"@description": "validator of NexSON constraints as well as constraints that would allow a study to be imported into the Open Tree of Life's phylogenetic synthesis tools", 
+"@id": "normalize_ot_nexson.py", 
+"@name": "normalize_ot_nexson.py", 
+"@url": "https://github.com/OpenTreeOfLife/api.opentreeoflife.org", 
 "invocation": {
 "checksPerformed": [
-"MISSING_MANDATORY_KEY", 
-"MISSING_OPTIONAL_KEY", 
-"UNRECOGNIZED_KEY", 
-"MISSING_LIST_EXPECTED", 
-"DUPLICATING_SINGLETON_KEY", 
-"REFERENCED_ID_NOT_FOUND", 
-"REPEATED_ID", 
-"MULTIPLE_ROOT_NODES", 
-"NO_ROOT_NODE", 
-"MULTIPLE_EDGES_FOR_NODES", 
-"CYCLE_DETECTED", 
-"DISCONNECTED_GRAPH_DETECTED", 
-"INCORRECT_ROOT_NODE_LABEL", 
-"TIP_WITHOUT_OTU", 
-"TIP_WITHOUT_OTT_ID", 
-"MULTIPLE_TIPS_MAPPED_TO_OTT_ID", 
-"NON_MONOPHYLETIC_TIPS_MAPPED_TO_OTT_ID", 
-"INVALID_PROPERTY_VALUE", 
-"PROPERTY_VALUE_NOT_USEFUL", 
-"UNRECOGNIZED_PROPERTY_VALUE", 
-"MULTIPLE_TREES", 
-"UNRECOGNIZED_TAG", 
-"CONFLICTING_PROPERTY_VALUES", 
-"NO_TREES", 
-"DEPRECATED_PROPERTY"
+{
+"$": "MISSING_MANDATORY_KEY"
+}, 
+{
+"$": "MISSING_OPTIONAL_KEY"
+}, 
+{
+"$": "UNRECOGNIZED_KEY"
+}, 
+{
+"$": "MISSING_LIST_EXPECTED"
+}, 
+{
+"$": "DUPLICATING_SINGLETON_KEY"
+}, 
+{
+"$": "REFERENCED_ID_NOT_FOUND"
+}, 
+{
+"$": "REPEATED_ID"
+}, 
+{
+"$": "MULTIPLE_ROOT_NODES"
+}, 
+{
+"$": "NO_ROOT_NODE"
+}, 
+{
+"$": "MULTIPLE_EDGES_FOR_NODES"
+}, 
+{
+"$": "CYCLE_DETECTED"
+}, 
+{
+"$": "DISCONNECTED_GRAPH_DETECTED"
+}, 
+{
+"$": "INCORRECT_ROOT_NODE_LABEL"
+}, 
+{
+"$": "TIP_WITHOUT_OTU"
+}, 
+{
+"$": "TIP_WITHOUT_OTT_ID"
+}, 
+{
+"$": "MULTIPLE_TIPS_MAPPED_TO_OTT_ID"
+}, 
+{
+"$": "NON_MONOPHYLETIC_TIPS_MAPPED_TO_OTT_ID"
+}, 
+{
+"$": "INVALID_PROPERTY_VALUE"
+}, 
+{
+"$": "PROPERTY_VALUE_NOT_USEFUL"
+}, 
+{
+"$": "UNRECOGNIZED_PROPERTY_VALUE"
+}, 
+{
+"$": "MULTIPLE_TREES"
+}, 
+{
+"$": "UNRECOGNIZED_TAG"
+}, 
+{
+"$": "CONFLICTING_PROPERTY_VALUES"
+}, 
+{
+"$": "NO_TREES"
+}, 
+{
+"$": "DEPRECATED_PROPERTY"
+}
 ], 
 "commandLine": [
-"--validate", 
-"--embed"
+{
+"$": "--validate"
+}, 
+{
+"$": "--embed"
+}
 ], 
-}, 
-"name": "normalize_ot_nexson.py", 
-"url": "https://github.com/OpenTreeOfLife/api.opentreeoflife.org", 
-}, 
-"isValid": false, 
-"messages": [
+"otherProperty": [
 {
-"code": "MISSING_MANDATORY_KEY", 
-"comment": "Missing required key \"@id\" in \"tree(id=None)\"\n", 
-"data": "@id", 
-"preserve": false, 
-"refersTo": {
-"inMeta": false, 
-"top": "trees", 
-"treeID": null, 
-"treesID": "trees2"
-}, 
-"severity": "ERROR"
+"$": "2.7.5", 
+"value": "STRING"
 }, 
 {
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:focalClade\" in \"meta\" in \"nexml(id=None)\"\n", 
-"data": "@property=ot:focalClade", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"property": "ot:focalClade", 
-"top": "meta"
-}, 
-"severity": "WARNING"
+"$": "CPython", 
+"value": "STRING"
+}
+]
+}
+}
+]
 }, 
 {
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:studyPublication\" in \"meta\" in \"nexml(id=None)\"\n", 
-"data": "@property=ot:studyPublication", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"property": "ot:studyPublication", 
-"top": "meta"
-}, 
-"severity": "WARNING"
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:focalClade\" in \"meta\" in \"nexml(id=None)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
 }, 
 {
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:studyYear\" in \"meta\" in \"nexml(id=None)\"\n", 
-"data": "@property=ot:studyYear", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"property": "ot:studyYear", 
-"top": "meta"
-}, 
-"severity": "WARNING"
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:studyPublication\" in \"meta\" in \"nexml(id=None)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
 }, 
 {
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:curatorName\" in \"meta\" in \"nexml(id=None)\"\n", 
-"data": "@property=ot:curatorName", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"property": "ot:curatorName", 
-"top": "meta"
-}, 
-"severity": "WARNING"
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:studyYear\" in \"meta\" in \"nexml(id=None)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
 }, 
 {
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:dataDeposit\" in \"meta\" in \"nexml(id=None)\"\n", 
-"data": "@property=ot:dataDeposit", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"property": "ot:dataDeposit", 
-"top": "meta"
-}, 
-"severity": "WARNING"
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:curatorName\" in \"meta\" in \"nexml(id=None)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
 }, 
 {
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:studyPublicationReference\" in \"meta\" in \"nexml(id=None)\"\n", 
-"data": "@property=ot:studyPublicationReference", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"property": "ot:studyPublicationReference", 
-"top": "meta"
-}, 
-"severity": "WARNING"
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:dataDeposit\" in \"meta\" in \"nexml(id=None)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
 }, 
 {
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@id\" in \"tree(id=None)\"\n", 
-"data": "@id", 
-"preserve": false, 
-"refersTo": {
-"inMeta": false, 
-"top": "trees", 
-"treeID": null, 
-"treesID": "trees2"
-}, 
-"severity": "WARNING"
-}, 
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
 {
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node2)\"\n", 
-"data": "@property=ot:isLeaf", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"nodeID": "node2", 
-"property": "ot:isLeaf", 
-"top": "trees", 
-"treeID": null, 
-"treesID": "trees2"
-}, 
-"severity": "WARNING"
-}, 
-{
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node3)\"\n", 
-"data": "@property=ot:isLeaf", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"nodeID": "node3", 
-"property": "ot:isLeaf", 
-"top": "trees", 
-"treeID": null, 
-"treesID": "trees2"
-}, 
-"severity": "WARNING"
-}, 
-{
-"code": "MISSING_OPTIONAL_KEY", 
-"comment": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node4)\"\n", 
-"data": "@property=ot:isLeaf", 
-"preserve": false, 
-"refersTo": {
-"inMeta": true, 
-"nodeID": "node4", 
-"property": "ot:isLeaf", 
-"top": "trees", 
-"treeID": null, 
-"treesID": "trees2"
-}, 
-"severity": "WARNING"
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:studyPublicationReference\" in \"meta\" in \"nexml(id=None)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
 }
 ]
 }
@@ -253,6 +257,32 @@
 "trees": {
 "@id": "trees2", 
 "@otus": "otus1", 
+"meta": [
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_MANDATORY_KEY", 
+"@humanMessage": "Missing required key \"@id\" in \"tree(id=None)\"\n", 
+"@preserve": false, 
+"@severity": "ERROR", 
+}
+]
+}, 
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@id\" in \"tree(id=None)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
+}
+], 
 "tree": [
 {
 "edge": [
@@ -300,7 +330,21 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta"
+"@xsi:type": "nex:LiteralMeta", 
+"meta": [
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node2)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
+}
+]
 }
 ]
 }, 
@@ -312,7 +356,21 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta"
+"@xsi:type": "nex:LiteralMeta", 
+"meta": [
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node3)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
+}
+]
 }
 ]
 }, 
@@ -324,7 +382,21 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta"
+"@xsi:type": "nex:LiteralMeta", 
+"meta": [
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "MISSING_OPTIONAL_KEY", 
+"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node4)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
+}
+]
 }
 ]
 }

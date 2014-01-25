@@ -2,7 +2,9 @@
 import sys
 SCRIPT_NAME = __name__  #@TODO replace with logger...
 ERR_STREAM = sys.stderr #@TODO replace with logger...
-from nexson_validator import WarningCodes, create_validation_nexson, prepare_annotation, add_or_replace_annotation
+from nexson_validator import WarningCodes, create_validation_nexson, \
+    prepare_annotation, add_or_replace_annotation, create_annotation_blob, \
+    finalize_message_list
 
 def error(msg):
     global SCRIPT_NAME, ERR_STREAM
@@ -53,14 +55,18 @@ if __name__ == '__main__':
         validation_log, nexson_obj = create_validation_nexson(obj,
                                                               codes_to_skip,
                                                               retain_deprecated=bool(args.retain_deprecated))
-        annotation = prepare_annotation(validation_log,
+        ann_event, agent, messages = prepare_annotation(validation_log,
                                         author_name=script_name,
                                         invocation=invoc,
                                         annotation_label="Open Tree NexSON validation")
         if args.embed:
-            add_or_replace_annotation(obj, annotation)
+            add_or_replace_annotation(obj, ann_event, agent, messages, validation_log)
             json.dump(obj, sys.stdout, sort_keys=True, indent=0)
         else:
+            finalize_message_list(messages)
+            annotation = create_annotation_blob(ann_event, agent, messages)
             json.dump(annotation, sys.stdout, sort_keys=True, indent=0)
     else:
         json.dump(obj, sys.stdout, sort_keys=True, indent=0)
+
+
