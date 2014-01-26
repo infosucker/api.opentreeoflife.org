@@ -2,3 +2,8 @@ Authors
 =======
 
 Mark T. Holder mtholder@gmail.com
+
+sortattr.xslt (used in round trip testing) is from 
+   http://stackoverflow.com/questions/1429991/using-xsl-to-sort-attributes
+
+

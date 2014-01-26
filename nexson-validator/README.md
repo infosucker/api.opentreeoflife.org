@@ -44,3 +44,10 @@ and unittest (currently none, but they'll go in <code>test_nexson_validator.py</
 This may never end up on PyPI, but I followed the procedures outlined on
     http://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 for the creation of the setup.py
+
+# Attribution
+
+The sortattr.xslt stylesheet (which is only used in round-trip testing) is from 
+   http://stackoverflow.com/questions/1429991/using-xsl-to-sort-attributes other code by Mark Holder.
+
+
