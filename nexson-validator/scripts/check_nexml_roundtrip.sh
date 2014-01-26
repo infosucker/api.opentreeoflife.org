@@ -13,6 +13,7 @@ then
     exit 1
 fi
 
+
 if test $3 = "-o"
 then
     echo "dot files may be overwritten"
@@ -81,4 +82,9 @@ if ! diff .cpp1.xml .cpp2.xml
 then
     echo "Did not roundtrip"
     exit 1
+fi
+
+if test $3 = "-o"
+then
+    rm .1.json .1.xml .2.xml .cpp1.xml .cpp2.xml .pp1.xml .pp2.xml .s1.xml .s2.xml 2>/dev/null
 fi
