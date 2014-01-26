@@ -113,7 +113,7 @@ def _add_child_list_to_ET_subtree(parent, child_list, key, key_order):
         ca, cd, cc = _break_keys_by_bf_type(child)
         cel = ET.SubElement(parent, key, attrib=ca)
         if cd:
-            cel.text = cd
+            cel.text = str(cd)
         _add_ET_subtree(cel, cc, key_order)
 
 def _add_ET_subtree(parent, children_dict, key_order=None):
@@ -152,7 +152,7 @@ def _break_keys_by_bf_type(o):
                         ak['xmlns:' + nsk] = nsv
             else:
                 s = k[1:]
-                ak[s] = v
+                ak[s] = unicode(v)
         elif k == '$':
             tk = v
         else:
@@ -173,7 +173,7 @@ def bf2ET(obj_dict, key_order=None):
     #attrib_dict = _xml_attrib_for_bf_obj(root_obj)
     r = ET.Element(root_name, attrib=atts)
     if data:
-        r.text = data
+        r.text = str(data)
     _add_ET_subtree(r, children, key_order)
     return r
 
@@ -221,7 +221,7 @@ def nexobj2ET(obj_dict):
     #attrib_dict = _xml_attrib_for_bf_obj(root_obj)
     r = ET.Element(root_name, attrib=atts)
     if data:
-        r.text = data
+        r.text = str(data)
     nexml_key_order = (('meta', None),
                        ('otus', (('meta', None),
                                  ('otu', None)
