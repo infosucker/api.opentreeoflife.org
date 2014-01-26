@@ -36,7 +36,9 @@ fi
 
 if test $passed -eq $total
 then
+    echo "tests passed"
     exit 0
 else
+    echo "some tests failed"
     exit 1
 fi 
