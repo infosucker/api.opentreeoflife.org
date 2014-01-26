@@ -14,10 +14,8 @@ then
 fi
 
 
-if test $3 = "-o"
+if ! test $3 = "-o"
 then
-    echo "dot files may be overwritten"
-else
     if test -f .1.xml -o -f .1.json -o -f .2.xml -o -f .pp2.xml -o -f .pp2.xml
     then
         echo "file .# or .pp# files in the way and the -o was not used as the 3rd arg"
