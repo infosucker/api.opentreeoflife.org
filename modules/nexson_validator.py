@@ -137,6 +137,8 @@ def create_validation_nexson(obj, warning_codes_to_skip, retain_deprecated=True)
     else:
         v = ValidationLogger(store_messages=True)
     v.retain_deprecated = retain_deprecated
+    if retain_deprecated:
+        v.warn_about_fixed = True
     n = NexSON(obj, v)
     return v, n
 
@@ -280,11 +282,16 @@ def add_or_replace_annotation(obj, annotation_event, agent, message_list, rich_l
         ot_agents['agent'].append(agent)
     for m in message_list:
         sub_m_list = [m]
-        #print sub_m_list
         address = m[' _address'] #@TEMP hack
         del m[' _address'] #@TEMP hack
-        target = find_target_of_nexpath(nexml_obj, address, id2obj)
-        append_messages_to_obj(target, sub_m_list)
+        try:
+            tl = find_target_of_nexpath(nexml_obj, address, id2obj)
+            if not isinstance(tl, list):
+                tl = [tl]
+        except:
+            tl = [nexml_obj]
+        for target in tl:
+            append_messages_to_obj(target, sub_m_list)
     
         #append_messages_to_obj(nexml_obj, message_list, meta=former_meta, ot_messages=ot_messages)
     
@@ -440,7 +447,10 @@ class NexsonAddress(object):
         return self._property_name
     property_name = property(get_property_name)
     def get_path_dict(self):
-            return self._container.get_path_dict(self._subelement, self._property_name)
+        p = self._container.get_path_dict(self._subelement, self._property_name)
+        if False:
+            p['idref'] = self._container.nexson_id
+        return p
     path = property(get_path_dict)
     def write_path_suffix_str(self, out):
         if self._subelement:
@@ -495,20 +505,34 @@ def find_target_of_nexpath(d, nexson_address, id2obj):
                 else:
                     trees_id = p['treesID']
                     el = id2obj[trees_id]
+    elif t == 'nexml':
+        el = id2obj[p['nexsonID']]
     else:
-        assert t in ['meta', 'otus', 'trees']
+        assert t in ['meta', 'otus', 'trees', 'nexml']
     if p.get('inMeta'):
         prop = p['property']
+        #sys.stderr.write('property in target="{p}"\n'.format(p=prop))
+        #sys.stderr.write('el="{p}"\n'.format(p=str(el)))
         assert(el is not None)
         found = False
-        if not is_meta:
-            mel = el['meta']
+        
+        if isinstance(el, list):
+            el_list = el
+        else:
+            el_list = [el]
+        matching_el_list = []
+        for el in el_list:
+            if not is_meta:
+                mel = el.get('meta', tuple())
+            elif not isinstance(el, list):
+                mel = [el]
+            else:
+                mel = el
             for e in mel:
                 if e['@property'] == prop:
-                    found = True
-                    el = e
-                    break
-            assert found
+                    matching_el_list.append(e)
+        #sys.stderr.write('matching_el_list="{p}"\n'.format(p=str(matching_el_list)))
+        return matching_el_list
     return el
 
 def convert_dict_to_badgerfish_dict(d):
@@ -923,6 +947,7 @@ class DefaultRichLogger(object):
         self.errors = []
         self.prefix = ''
         self.retain_deprecated = False
+        self.warn_about_fixed = False
         self.id2obj = {}
         self.annotation_event_ids_to_store = []
         self.flagged_messages = {} # id to (message obj., parent of meta)
@@ -1546,7 +1571,9 @@ class Tree(NexsonDictWrapper):
                 self._tagged_for_inclusion = True
                 inc_tag = self._tag_list[tl.index(t)]
         if self._tagged_for_inclusion and self._tagged_for_deletion:
-            rich_logger.warning(ConflictingPropertyValuesWarning([('ot:tag', del_tag), ('ot:tag', inc_tag)], address=self.address_of_meta))
+            rich_logger.warning(ConflictingPropertyValuesWarning([('ot:tag', del_tag), 
+                                                                  ('ot:tag', inc_tag)],
+                                                                 address=self.address_of_meta_key('ot:tag')))
         self._node_dict = {}
         self._node_list = []
         self._edge_dict = {}
@@ -1617,12 +1644,22 @@ class Tree(NexsonDictWrapper):
                         multi_labelled_ott_id.add(nd._otu._ott_id)
                     nl.append(nd)
                 if not is_flagged_as_leaf:
-                    rich_logger.warning(MissingOptionalKeyWarning(key=None, address=nd.address_of_meta_key('ot:isLeaf')))
+                    add_warning = True
                     if not rich_logger.retain_deprecated:
                         nd.add_meta('ot:isLeaf', True)
+                        if not rich_logger.warn_about_fixed:
+                            add_warning = False
+                    if add_warning:
+                        rich_logger.warning(MissingOptionalKeyWarning(key=None, address=nd.address_of_meta_key('ot:isLeaf')))
+                    
             elif is_flagged_as_leaf:
-                rich_logger.emit_error(InvalidPropertyValueWarning(True, address=nd.address_of_meta_key('ot:isLeaf')))
-                nd.del_meta('ot:isLeaf') # Non const. Fixing.
+                add_warning = True
+                if not rich_logger.retain_deprecated:
+                    nd.del_meta('ot:isLeaf') # Non const. Fixing.
+                    if not rich_logger.warn_about_fixed:
+                        add_warning = False
+                if add_warning:
+                    rich_logger.emit_error(InvalidPropertyValueWarning(True, address=nd.address_of_meta_key('ot:isLeaf')))
         for ott_id in multi_labelled_ott_id:
             tip_list = ott_id2node.get(ott_id)
             rich_logger.warning(MultipleTipsMappedToOTTIDWarning(ott_id, tip_list, address=self.address))
@@ -1761,9 +1798,9 @@ class TreeCollection(NexsonDictWrapper):
 class NexSON(NexsonDictWrapper):
     REQUIRED_KEYS = ('@id',)
     EXPECETED_KEYS = ('@id', 'otus', 'trees', 'meta')
-    PERMISSIBLE_KEYS = ('@about',
+    PERMISSIBLE_KEYS = ('@id',
+                     '@about',
                      '@generator',
-                     '@id',
                      '@nexmljson',
                      '@version',
                      '@xmlns',
@@ -1788,9 +1825,11 @@ class NexSON(NexsonDictWrapper):
                 'inMeta': True,
             }
         else: 
-            d = {'inMeta':False}
+            d = {'top': 'nexml',
+                 'inMeta': False}
         if property_name:
             d['property'] = property_name
+        d['nexsonID'] = self.nexson_id
         return d
     def __init__(self, o, rich_logger=None):
         '''Creates an object that validates `o` as a dictionary
@@ -1811,7 +1850,10 @@ class NexSON(NexsonDictWrapper):
             rich_logger.emit_error(MissingMandatoryKeyWarning('nexml', address=self.address))
             return ## EARLY EXIT!!
         self._nexml = o['nexml']
-
+        NexsonDictWrapper.__init__(self, self._nexml, rich_logger, None)
+        if rich_logger and (rich_logger.id2obj is not None) and '@id' in self._nexml:
+            _add_value_to_dict(rich_logger.id2obj, self._nexml['@id'], self)
+        
         check_key_presence(self._nexml, self, rich_logger)
         self._consume_meta(self._nexml, rich_logger, self.EXPECTED_META_KEYS)
         self._study_id = self.get_singelton_meta('ot:studyId')

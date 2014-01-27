@@ -128,92 +128,9 @@
 "@severity": "WARNING", 
 "refersTo": {
 "@inMeta": true, 
+"@property": "ot:tag", 
 "@top": "trees", 
 "@treeID": "tree1", 
-"@treesID": "trees2"
-}
-}, 
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node2)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node2", 
-"@property": "ot:isLeaf", 
-"@top": "trees", 
-"@treeID": "tree1", 
-"@treesID": "trees2"
-}
-}, 
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node3)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node3", 
-"@property": "ot:isLeaf", 
-"@top": "trees", 
-"@treeID": "tree1", 
-"@treesID": "trees2"
-}
-}, 
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node4)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node4", 
-"@property": "ot:isLeaf", 
-"@top": "trees", 
-"@treeID": "tree1", 
-"@treesID": "trees2"
-}
-}, 
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node2)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node2", 
-"@property": "ot:isLeaf", 
-"@top": "trees", 
-"@treeID": "tree2", 
-"@treesID": "trees2"
-}
-}, 
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node3)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node3", 
-"@property": "ot:isLeaf", 
-"@top": "trees", 
-"@treeID": "tree2", 
-"@treesID": "trees2"
-}
-}, 
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node4)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node4", 
-"@property": "ot:isLeaf", 
-"@top": "trees", 
-"@treeID": "tree2", 
 "@treesID": "trees2"
 }
 }, 

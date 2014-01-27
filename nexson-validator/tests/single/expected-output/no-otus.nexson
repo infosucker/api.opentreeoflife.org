@@ -1,4 +1,4 @@
-validate_ot_nexson.py: ERROR: Missing required key "otus" in "nexml(id=None)"
+validate_ot_nexson.py: ERROR: Missing required key "otus" in "nexml(id=some-id)"
 validate_ot_nexson.py: ERROR: An ID Reference did not match a previous ID ("@otus": "otus1") in "trees(id=trees2)"
 validate_ot_nexson.py: ERROR: An ID Reference did not match a previous ID ("@otu": "otu1") in "node(id=node2)"
 validate_ot_nexson.py: ERROR: An ID Reference did not match a previous ID ("@otu": "otu2") in "node(id=node3)"

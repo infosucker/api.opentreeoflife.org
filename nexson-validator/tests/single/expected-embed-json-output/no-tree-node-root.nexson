@@ -274,21 +274,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node2)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -300,21 +286,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node3)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -326,21 +298,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node4)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }

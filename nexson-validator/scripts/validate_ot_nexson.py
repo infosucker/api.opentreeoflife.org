@@ -56,6 +56,7 @@ if __name__ == '__main__':
         v = FilteringLogger(codes_to_skip=[WarningCodes.UNVALIDATED_ANNOTATION])
     else:
         v = ValidationLogger()
+    v.warn_about_fixed = True
     try:
         n = NexSON(obj, v)
     except NexSONError as nx:

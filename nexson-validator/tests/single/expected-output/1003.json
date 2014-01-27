@@ -1,5 +1,5 @@
-validate_ot_nexson.py: WARNING: Missing optional key "@property=ot:dataDeposit" in "meta" in "nexml(id=None)"
-validate_ot_nexson.py: WARNING: Unrecognized value for a tag: "ingroup added;" in "meta" in "nexml(id=None)"
+validate_ot_nexson.py: WARNING: Missing optional key "@property=ot:dataDeposit" in "meta" in "nexml(id=study)"
+validate_ot_nexson.py: WARNING: Unrecognized value for a tag: "ingroup added;" in "meta" in "nexml(id=study)"
 validate_ot_nexson.py: WARNING: Missing optional key "@property=ot:isLeaf" in "meta" in "node(id=node503666)"
 validate_ot_nexson.py: WARNING: Missing optional key "@property=ot:isLeaf" in "meta" in "node(id=node503667)"
 validate_ot_nexson.py: WARNING: Missing optional key "@property=ot:isLeaf" in "meta" in "node(id=node503669)"

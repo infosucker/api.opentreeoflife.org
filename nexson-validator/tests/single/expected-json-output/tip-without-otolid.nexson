@@ -135,34 +135,6 @@
 }
 }, 
 {
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node2)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node2", 
-"@property": "ot:isLeaf", 
-"@top": "trees", 
-"@treeID": "tree1", 
-"@treesID": "trees2"
-}
-}, 
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node3)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node3", 
-"@property": "ot:isLeaf", 
-"@top": "trees", 
-"@treeID": "tree1", 
-"@treesID": "trees2"
-}
-}, 
-{
 "@code": "TIP_WITHOUT_OTT_ID", 
 "@humanMessage": "Tip node mapped to an OTU (\"otu3\") which does not have an OTT ID in \"node(id=node4)\"\n", 
 "@preserve": false, 
@@ -170,20 +142,6 @@
 "refersTo": {
 "@inMeta": false, 
 "@nodeID": "node4", 
-"@top": "trees", 
-"@treeID": "tree1", 
-"@treesID": "trees2"
-}
-}, 
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node4)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-"refersTo": {
-"@inMeta": true, 
-"@nodeID": "node4", 
-"@property": "ot:isLeaf", 
 "@top": "trees", 
 "@treeID": "tree1", 
 "@treesID": "trees2"

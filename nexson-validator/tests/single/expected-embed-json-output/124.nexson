@@ -50,12 +50,64 @@
 {
 "$": "cpDNA & nrDNA", 
 "@property": "ot:tag", 
-"@xsi:type": "nex:LiteralMeta"
+"@xsi:type": "nex:LiteralMeta", 
+"meta": [
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "UNRECOGNIZED_TAG", 
+"@humanMessage": "Unrecognized value for a tag: \"cpDNA & nrDNA\" in \"meta\" in \"nexml(id=study)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
+}, 
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "UNRECOGNIZED_TAG", 
+"@humanMessage": "Unrecognized value for a tag: \"ingroup added;\" in \"meta\" in \"nexml(id=study)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
+}
+]
 }, 
 {
 "$": "ingroup added;", 
 "@property": "ot:tag", 
-"@xsi:type": "nex:LiteralMeta"
+"@xsi:type": "nex:LiteralMeta", 
+"meta": [
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "UNRECOGNIZED_TAG", 
+"@humanMessage": "Unrecognized value for a tag: \"cpDNA & nrDNA\" in \"meta\" in \"nexml(id=study)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
+}, 
+{
+"@property": "ot:messages", 
+"@xsi:type": "nex:ResourceMeta", 
+"message": [
+{
+"@code": "UNRECOGNIZED_TAG", 
+"@humanMessage": "Unrecognized value for a tag: \"ingroup added;\" in \"meta\" in \"nexml(id=study)\"\n", 
+"@preserve": false, 
+"@severity": "WARNING", 
+}
+]
+}
+]
 }, 
 {
 "@property": "ot:annotationEvents", 
@@ -175,30 +227,6 @@
 }
 ]
 }
-}
-]
-}, 
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "UNRECOGNIZED_TAG", 
-"@humanMessage": "Unrecognized value for a tag: \"cpDNA & nrDNA\" in \"meta\" in \"nexml(id=None)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}, 
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "UNRECOGNIZED_TAG", 
-"@humanMessage": "Unrecognized value for a tag: \"ingroup added;\" in \"meta\" in \"nexml(id=None)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
 }
 ]
 }
@@ -1959,21 +1987,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988722)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -1985,21 +1999,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988723)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2011,21 +2011,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988724)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2037,21 +2023,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988725)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2063,21 +2035,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988726)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2089,21 +2047,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988727)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2115,21 +2059,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988728)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2141,21 +2071,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988729)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2167,21 +2083,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988730)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2193,21 +2095,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988731)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2219,21 +2107,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988732)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2245,21 +2119,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988733)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2271,21 +2131,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988734)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2297,21 +2143,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988735)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2323,21 +2155,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988736)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2349,21 +2167,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988737)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2375,21 +2179,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988738)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2401,21 +2191,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988739)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2427,21 +2203,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988740)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2453,21 +2215,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988741)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2479,21 +2227,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988742)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2505,21 +2239,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988743)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2531,21 +2251,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988744)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2557,21 +2263,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988745)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2583,21 +2275,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988746)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2609,21 +2287,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988747)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2635,21 +2299,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988748)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2664,21 +2314,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988750)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2690,21 +2326,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988751)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2719,21 +2341,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988753)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2745,21 +2353,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988754)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2771,21 +2365,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988755)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2797,21 +2377,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988756)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2823,21 +2389,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988757)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2849,21 +2401,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988758)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2875,21 +2413,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988759)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2901,21 +2425,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988760)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2930,21 +2440,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988762)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2965,21 +2461,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988766)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -2991,21 +2473,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988767)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3020,21 +2488,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988769)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3046,21 +2500,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988770)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3072,21 +2512,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988771)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3098,21 +2524,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988772)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3127,21 +2539,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988774)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3153,21 +2551,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988775)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3179,21 +2563,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988776)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3208,21 +2578,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988778)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3234,21 +2590,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988779)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3260,21 +2602,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988780)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3289,21 +2617,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988782)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3318,21 +2632,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988784)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3344,21 +2644,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988785)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3370,21 +2656,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988786)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3396,21 +2668,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988787)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3422,21 +2680,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988788)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3448,21 +2692,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988789)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3474,21 +2704,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988790)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3500,21 +2716,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988791)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3526,21 +2728,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988792)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3552,21 +2740,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988793)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3578,21 +2752,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988794)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3604,21 +2764,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988795)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3630,21 +2776,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988796)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3656,21 +2788,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988797)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3682,21 +2800,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988798)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3708,21 +2812,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988799)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3734,21 +2824,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988800)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3760,21 +2836,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988801)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3789,21 +2851,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988803)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -3815,21 +2863,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node988804)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }

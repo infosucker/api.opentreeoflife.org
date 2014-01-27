@@ -43,7 +43,7 @@
 "annotation": [
 {
 "@description": "validator of NexSON constraints as well as constraints that would allow a study to be imported into the Open Tree of Life's phylogenetic synthesis tools", 
-"@passedChecks": false, 
+"@passedChecks": true, 
 "@preserve": false, 
 "@wasAssociatedWithAgentId": "normalize_ot_nexson.py"
 }
@@ -267,21 +267,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node2)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -293,21 +279,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node3)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }, 
@@ -319,21 +291,7 @@
 "$": true, 
 "@datatype": "xsd:boolean", 
 "@property": "ot:isLeaf", 
-"@xsi:type": "nex:LiteralMeta", 
-"meta": [
-{
-"@property": "ot:messages", 
-"@xsi:type": "nex:ResourceMeta", 
-"message": [
-{
-"@code": "MISSING_OPTIONAL_KEY", 
-"@humanMessage": "Missing optional key \"@property=ot:isLeaf\" in \"meta\" in \"node(id=node4)\"\n", 
-"@preserve": false, 
-"@severity": "WARNING", 
-}
-]
-}
-]
+"@xsi:type": "nex:LiteralMeta"
 }
 ]
 }
