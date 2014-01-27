@@ -59,6 +59,7 @@ def _gen_bf_el(x):
     try:
         tl = [i.data for i in tl]
         text_content = ''.join(tl)
+        text_content = text_content.strip()
     except:
         text_content = ''
     if text_content:
