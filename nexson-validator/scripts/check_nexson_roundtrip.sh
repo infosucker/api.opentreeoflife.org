@@ -13,7 +13,6 @@ then
     exit 1
 fi
 
-
 if ! test $3 = "-o"
 then
     if test -f .1.xml -o -f .2.json
@@ -22,7 +21,7 @@ then
         exit 1
     fi
 fi
-
+set -x
 # 1. to NeXML
 if ! python "$dir/xml2json-badgerfish.py" jn "${inpnexson}" > .1.xml
 then
@@ -32,10 +31,10 @@ fi
 
 
 # 2. validate NeXML
-if ! xmllint --schema "${nexmlschemafp}" .1.xml >/dev/null 2>&1
+if ! xmllint --schema "${nexmlschemafp}" .1.xml
 then
     echo "XML written to .1.xml was not valid NeXML"
-    if test $inpwasvalid -eq 1
+    if false
     then
         exit 1
     fi

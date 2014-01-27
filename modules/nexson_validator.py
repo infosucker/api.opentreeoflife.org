@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import xml.etree.ElementTree as ET
 from cStringIO import StringIO
+import xml.dom.minidom
 import datetime
 import platform
 import codecs
@@ -14,16 +15,6 @@ VERSION = '0.0.2a'
 ###############################################################################
 # Code for badgerfish conversion of TreeBase XML to 
 ###############################################################################
-def _hacky_strip_namespace(s):
-    '''This is the hacky function used in badgerfish conversion that uses '{ns}tag'
-    as the pattern for a tag with namespace `ns`
-    '''
-    if s.startswith('{'):
-        sl = s.split('}') # hack to deal with namespaces...
-        assert len(sl) == 2
-        return sl[-1]
-    return s
-
 def _gen_bf_el(x):
     '''
     Builds a dictionary from the ElementTree element x
@@ -35,15 +26,40 @@ def _gen_bf_el(x):
     '''
     obj = {}
     # grab the tag of x
-    t = _hacky_strip_namespace(x.tag)
+    el_name = x.nodeName
+    assert el_name is not None
     # add the attributes to the dictionary
-    a = x.attrib
-    for k, v in a.iteritems():
-        obj['@' + _hacky_strip_namespace(k)] = v
+    att_container = x.attributes
+    ns_obj = {}
+    for i in xrange(att_container.length):
+        attr = att_container.item(i)
+        n = attr.name
+        t = None
+        if n.startswith('xmlns'):
+            if n == 'xmlns':
+                t = '$'
+            elif n.startswith('xmlns:'):
+                t = n[6:] # strip off the xmlns:
+        if t is None:
+            obj['@' + n] = attr.value
+        else:
+            ns_obj[t] = attr.value
+    if ns_obj:
+        obj['@xmlns'] = ns_obj
+
+    tl = []
+    ntl = []
+    x.normalize()
     # store the text content of the element under the key '$'
-    if x.text:
-        text_content = x.text.strip()
-    else:
+    for c in x.childNodes:
+        if c.nodeType == xml.dom.minidom.Node.TEXT_NODE:
+            tl.append(c)
+        else:
+            ntl.append(c)
+    try:
+        tl = [i.data for i in tl]
+        text_content = ''.join(tl)
+    except:
         text_content = ''
     if text_content:
         obj['$'] = text_content
@@ -54,8 +70,8 @@ def _gen_bf_el(x):
     cd = {}
     ko = []
     ks = set()
-    for child in x:
-        k = _hacky_strip_namespace(child.tag)
+    for child in ntl:
+        k = child.nodeName
         if k not in ks:
             ko.append(k)
             ks.add(k)
@@ -82,9 +98,9 @@ def _gen_bf_el(x):
         #   results in a name clash among the tags of the children
         assert ct not in obj
         obj[ct] = dcl
-    return t, obj
+    return el_name, obj
 
-def to_badgerfish_dict(filepath=None, file_object=None, encoding=u'utf8'):
+def to_badgerfish_dict(src, encoding=u'utf8'):
     '''Takes either:
             (1) a file_object, or
             (2) (if file_object is None) a filepath and encoding
@@ -94,13 +110,112 @@ def to_badgerfish_dict(filepath=None, file_object=None, encoding=u'utf8'):
     Caveats/bugs:
         
     '''
-    if file_object is None:
-        file_object = codecs.open(filepath, 'rU', encoding=encoding)
-    root = ET.parse(file_object).getroot()
+    if isinstance(src, str):
+        src = codecs.open(src, 'rU', encoding=encoding)
+    doc = xml.dom.minidom.parse(src)
+    root = doc.documentElement
     key, val = _gen_bf_el(root)
     return {key: val}
 
-def get_ot_study_info_from_nexml(filepath=None, file_object=None, encoding=u'utf8'):
+def _python_instance_to_nexml_meta_datatype(v):
+    if isinstance(v, int) or isinstance(v, long):
+        return 'xsd:int'
+    if isinstance(v, float):
+        return 'xsd:float'
+    if isinstance(v, bool):
+        return 'xsd:boolean'
+    return 'xsd:string'
+
+# based on http://www.w3.org/TR/xmlschema-2
+_OT_META_PROP_TO_DATATYPE = {
+    'ot:studyYear' : 'xsd:gYear'
+}
+def _add_child_list_to_ET_subtree(parent, child_list, key, key_order):
+    if not isinstance(child_list, list):
+        child_list = [child_list]
+    for child in child_list:
+        ca, cd, cc = _break_keys_by_bf_type(child)
+        if key == u'meta':
+            if ('datatype' not in ca) and (cd is not None):
+                dsv = _OT_META_PROP_TO_DATATYPE.get(ca.get('property'))
+                if dsv is None:
+                    dsv = _python_instance_to_nexml_meta_datatype(cd)
+                ca['datatype'] = dsv
+            cel = ET.SubElement(parent, u'meta', attrib=ca)
+        else:
+            cel = ET.SubElement(parent, key, attrib=ca)
+        if cd is not None:
+            cel.text = unicode(cd)
+        _add_ET_subtree(cel, cc, key_order)
+
+def _add_ET_subtree(parent, children_dict, key_order=None):
+    written = set()
+    if key_order:
+        for t in key_order:
+            k, next_order_el = t
+            assert(next_order_el is None or isinstance(next_order_el, tuple))
+            if k in children_dict:
+                child_list = children_dict[k]
+                written.add(k)
+                _add_child_list_to_ET_subtree(parent, child_list, k, next_order_el)
+    ksl = children_dict.keys()
+    ksl.sort()
+    for k in ksl:
+        child_list = children_dict[k]
+        if k not in written:
+            _add_child_list_to_ET_subtree(parent, child_list, k, None)
+
+
+def _break_keys_by_bf_type(o):
+    '''Breaks o into a triple two dicts and text data by key type:
+        attrib keys (start with '@'),
+        text (value associated with the '$' or None),
+        child element keys (all others)
+    '''
+    ak = {}
+    tk = None
+    ck = {}
+    for k, v in o.items():
+        if k.startswith('@'):
+            if k == '@xmlns':
+                ak['xmlns'] = v['$']
+                for nsk, nsv in v.items():
+                    if nsk != '$':
+                        ak['xmlns:' + nsk] = nsv
+            else:
+                s = k[1:]
+                ak[s] = unicode(v)
+        elif k == '$':
+            tk = v
+        else:
+            ck[k] = v
+    return ak, tk, ck
+
+
+def bf2ET(obj_dict, key_order=None):
+    '''Converts a dict-like object that obeys the badgerfish conventions
+    to an ElementTree.Element that represents the data in a subtree of
+    XML tree.
+    '''
+    base_keys = obj_dict.keys()
+    assert(len(base_keys) == 1)
+    root_name = base_keys[0]
+    root_obj = obj_dict[root_name]
+    atts, data, children = _break_keys_by_bf_type(root_obj)
+    #attrib_dict = _xml_attrib_for_bf_obj(root_obj)
+    r = ET.Element(root_name, attrib=atts)
+    if data is not None:
+        r.text = unicode(data)
+    _add_ET_subtree(r, children, key_order)
+    return r
+
+def write_obj_as_xml(obj_dict, file_obj):
+    r = bf2ET(obj_dict)
+    ET.ElementTree(r).write(file_obj,
+                            encoding='utf-8')
+    file_obj.write(u'\n')
+
+def get_ot_study_info_from_nexml(src, encoding=u'utf8'):
     '''Converts an XML doc to JSON using the badgerfish convention (see to_badgerfish_dict)
     and then prunes elements not used by open tree of life study curartion.
 
@@ -108,17 +223,95 @@ def get_ot_study_info_from_nexml(filepath=None, file_object=None, encoding=u'utf
         removes nexml/characters @TODO: should replace it with a URI for 
             where the removed character data can be found.
     '''
-    o = to_badgerfish_dict(fn)
-    del o['nexml']['characters']
+    o = to_badgerfish_dict(src)
+    try:
+        if ('nexml' in o) and ('characters' in o['nexml']):
+            del o['nexml']['characters']
+    except:
+        pass
     return o
 
-def get_ot_study_info_from_treebase_nexml(filepath=None, file_object=None, encoding=u'utf8'):
+def get_ot_study_info_from_treebase_nexml(src, encoding=u'utf8'):
     '''Just a stub at this point. Intended to normalize treebase-specific metadata 
     into the locations where open tree of life software that expects it. 
+
+    `src` can be a string (filepath) or a input file object.
     @TODO: need to investigate which metadata should move or be copied
     '''
-    o = get_ot_study_info_from_nexml(filepath=filepath, file_object=file_object, encoding=encoding)
+    o = get_ot_study_info_from_nexml(src, encoding=encoding)
     return o
+
+
+def nexobj2ET(obj_dict, root_atts=None):
+    base_keys = obj_dict.keys()
+    assert(len(base_keys) == 1)
+    root_name = base_keys[0]
+    root_obj = obj_dict[root_name]
+    atts, data, children = _break_keys_by_bf_type(root_obj)
+    atts['generator'] = 'org.opentreeoflife.api.nexonvalidator.json2xml'
+    if not 'version' in atts:
+        atts['version'] = '0.9'
+    if root_atts:
+        for k, v in root_atts.items():
+            atts[k] = v
+    #attrib_dict = _xml_attrib_for_bf_obj(root_obj)
+    r = ET.Element(root_name, attrib=atts)
+    if data is not None:
+        r.text = unicode(data)
+    nexml_key_order = (('meta', None),
+                       ('otus', (('meta', None),
+                                 ('otu', None)
+                                )
+                       ),
+                       ('characters', (('meta', None),
+                                       ('format',(('meta', None),
+                                                  ('states', (('state', None),
+                                                              ('uncertain_state_set', None),
+                                                             )
+                                                  ),
+                                                  ('char', None)
+                                                 ),
+                                       ),
+                                       ('matrix', (('meta', None),
+                                                   ('row', None),
+                                                  )
+                                       ),
+                                      ),
+                       ),
+                       ('trees', (('meta', None),
+                                  ('tree', (('meta', None),
+                                            ('node', None),
+                                            ('edge', None)
+                                           )
+                                  )
+                                 )
+                       )
+                      )
+    _add_ET_subtree(r, children, nexml_key_order)
+    return r
+
+def write_obj_as_nexml(obj_dict, file_obj):
+    root_atts = {
+        "xmlns:nex": "http://www.nexml.org/2009",
+        "xmlns": "http://www.nexml.org/2009",
+        "xmlns:xsd": "http://www.w3.org/2001/XMLSchema#",
+        "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+        "xmlns:ot": "http://purl.org/opentree-terms#",
+    }
+    extra = {
+        "xmlns:dc": "http://purl.org/dc/elements/1.1/",
+        "xmlns:dcterms": "http://purl.org/dc/terms/",
+        "xmlns:prism": "http://prismstandard.org/namespaces/1.2/basic/",
+        "xmlns:rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "xmlns:rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xmlns:skos": "http://www.w3.org/2004/02/skos/core#",
+        "xmlns:tb": "http://purl.org/phylo/treebase/2.0/terms#",
+    }
+    r = nexobj2ET(obj_dict, root_atts=root_atts)
+    ET.ElementTree(r).write(file_obj,
+                            encoding='utf-8')
+    file_obj.write(u'\n')
+    
 
 ################################################################################
 # End of badgerfish...
