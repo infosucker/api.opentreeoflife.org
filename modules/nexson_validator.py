@@ -118,6 +118,7 @@ def to_badgerfish_dict(src, encoding=u'utf8'):
     key, val = _gen_bf_el(root)
     return {key: val}
 
+
 def _python_instance_to_nexml_meta_datatype(v):
     if isinstance(v, int) or isinstance(v, long):
         return 'xsd:int'
@@ -128,16 +129,37 @@ def _python_instance_to_nexml_meta_datatype(v):
     return 'xsd:string'
 
 # based on http://www.w3.org/TR/xmlschema-2
+# xsd:string is considered the default...
 _OT_META_PROP_TO_DATATYPE = {
-    'ot:studyYear' : 'xsd:gYear'
+    'ot:focalClade': 'xsd:int',
+    'ot:isLeaf': 'xsd:boolean',
+    'ot:notIntendedForSynthesis': 'xsd:boolean',
+    'ot:notUsingRootedTrees': 'xsd:boolean',
+    'ot:ottid': 'xsd:int',
+    'ot:studyYear' : 'xsd:int',
+    }
+_XSD_TYPE_TO_VALID_PYTHON_TYPES = {
+    'numeric': set([float, int, long]),
+    'xsd:int': set([int, long]),
+    'xsd:float': set([float]),
+    'xsd:boolean': set([bool]),
+    'xsd:string': set([str, unicode]),
 }
+_XSD_TYPE_COERCION = {
+    'numeric': float,
+    'xsd:int': int,
+    'xsd:float': float,
+    'xsd:boolean': lambda x: x.lower() == 'true',
+    'xsd:string': unicode,
+}
+
 def _add_child_list_to_ET_subtree(parent, child_list, key, key_order):
     if not isinstance(child_list, list):
         child_list = [child_list]
     for child in child_list:
         ca, cd, cc = _break_keys_by_bf_type(child)
         if key == u'meta':
-            if ('datatype' not in ca) and (cd is not None):
+            if 'datatype' not in ca:
                 dsv = _OT_META_PROP_TO_DATATYPE.get(ca.get('property'))
                 if dsv is None:
                     dsv = _python_instance_to_nexml_meta_datatype(cd)
@@ -297,7 +319,7 @@ def write_obj_as_nexml(obj_dict, file_obj):
         "xmlns": "http://www.nexml.org/2009",
         "xmlns:xsd": "http://www.w3.org/2001/XMLSchema#",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        "xmlns:ot": "http://purl.org/opentree-terms#",
+        "xmlns:ot": "http://purl.org/opentree/nexson",
     }
     extra = {
         "xmlns:dc": "http://purl.org/dc/elements/1.1/",
@@ -601,6 +623,12 @@ class WarningCodes():
               'CONFLICTING_PROPERTY_VALUES',
               'NO_TREES',
               'DEPRECATED_PROPERTY',
+              'UNNECESSARY_ATTRIBUTE',
+              'UNEXPECTED_META_DATATYPE',
+              'INCORRECT_META_DATATYPE_SPECIFIED',
+              'INCORRECT_META_DATATYPE_FOUND',
+              'METADATA_TYPE_COERCION',
+              'INCOMPATIBLE_META_DATATYPE_FOUND',
               )
     numeric_codes_registered = []
 # monkey-patching WarningCodes...
@@ -1105,6 +1133,68 @@ class IncorrectRootNodeLabelWarning(WarningMessage):
     def convert_data_for_json(self):
         return None
 
+class UnnecessaryAttributeWarning(WarningMessage):
+    def __init__(self, att, address, severity=SeverityCodes.ERROR):
+        data = {'attribute': att}
+        WarningMessage.__init__(self, WarningCodes.UNNECESSARY_ATTRIBUTE, data=data, address=address, severity=severity)
+        self.att = att
+    def write(self, outstream, prefix):
+        outstream.write('{p}Unnecessary attribute "{a}"'.format(p=prefix, a=self.att))
+        self._write_message_suffix(outstream)
+class UnexpectedMetaDatatypeWarning(WarningMessage):
+    def __init__(self, t, address, severity=SeverityCodes.ERROR):
+        data = {'stated_type': t}
+        WarningMessage.__init__(self, WarningCodes.UNEXPECTED_META_DATATYPE, data=data, address=address, severity=severity)
+        self.stated_type = t
+    def write(self, outstream, prefix):
+        outstream.write('{p}Unnecessary (redundant) indication of the type of data ({t}) found in meta'.format(p=prefix, t=self.stated_type))
+        self._write_message_suffix(outstream)
+    def convert_data_for_json(self):
+        return None
+class IncorrectMetaDatatypeSpecifiedWarning(WarningMessage):
+    def __init__(self, t, address, severity=SeverityCodes.ERROR):
+        data = {'stated_type': t}
+        WarningMessage.__init__(self, WarningCodes.INCORRECT_META_DATATYPE_SPECIFIED, data=data, address=address, severity=severity)
+        self.stated_type = t
+    def write(self, outstream, prefix):
+        outstream.write('{p}Unexpected datatype specified ({t}) for meta'.format(p=prefix, t=self.stated_type))
+        self._write_message_suffix(outstream)
+    def convert_data_for_json(self):
+        return None
+class IncorrectMetaDatatypeFoundWarning(WarningMessage):
+    def __init__(self, found, expected, address, severity=SeverityCodes.ERROR):
+        data = {'type_found': found, 'type_expected': expected}
+        WarningMessage.__init__(self, WarningCodes.INCORRECT_META_DATATYPE_FOUND, data=data, address=address, severity=severity)
+        self.found = found
+        self.expected = expected
+    def write(self, outstream, prefix):
+        outstream.write('{p}Unexpected type of data ({f}) found in meta. Expeceted {e}'.format(p=prefix, f=self.found, e=self.expected))
+        self._write_message_suffix(outstream)
+    def convert_data_for_json(self):
+        return None
+class MetaDatatypeCoercionWarning(WarningMessage):
+    def __init__(self, value, expected_type, address, severity=SeverityCodes.ERROR):
+        data = {'value':value, 'expected_type': expected_type}
+        WarningMessage.__init__(self, WarningCodes.METADATA_TYPE_COERCION, data=data, address=address, severity=severity)
+        self.expected = expected_type
+    def write(self, outstream, prefix):
+        outstream.write('{p}Metadata value was coerced to type {t}'.format(p=prefix, t=self.expected))
+        self._write_message_suffix(outstream)
+    def convert_data_for_json(self):
+        return None
+class IncompatibleMetaDatatypeFoundWarning(WarningMessage):
+    def __init__(self, found, expected, address, severity=SeverityCodes.ERROR):
+        data = {'type_found': found, 'type_expected': expected}
+        WarningMessage.__init__(self, WarningCodes.INCOMPATIBLE_META_DATATYPE_FOUND, data=data, address=address, severity=severity)
+        self.found = found
+        self.expected = expected
+    def write(self, outstream, prefix):
+        outstream.write('{p}Incompatible type of data ({f}) found in meta. Expeceted {e}'.format(p=prefix, f=self.found, e=self.expected))
+        self._write_message_suffix(outstream)
+    def convert_data_for_json(self):
+        return None
+
+
 class TreeCycleWarning(WarningMessage):
     def __init__(self, node, address, severity=SeverityCodes.ERROR):
         WarningMessage.__init__(self, WarningCodes.CYCLE_DETECTED, data=node, address=address, severity=severity)
@@ -1134,6 +1224,20 @@ class DisconnectedTreeWarning(WarningMessage):
 # Warning/error logger types...
 ################################################################################
 class DefaultRichLogger(object):
+    '''This is misnamed - it logs the error and warning, but also has some
+    configuration variables for validation. It is a scratchspace for notes and 
+    configuration of the validation action (passed in to every function involved
+    in the creation of a NexSON object)
+    
+    Config properties:
+        retain_deprecated (default = False) if True tells the validator to leave
+            old properties alone.
+        warn_about_fixed (default False) if True, warnings are issued even for
+            aspcets of the NexSON blob that have been fixed by the validator.
+        retain_type_hints (default False) if True the meta @datatype and @xsd:type will be retained.
+        coerce_meta (default True) if True, then coercion of the value of a meta element will be 
+            attempted if the element does not have the appropriate type.
+    '''
     def __init__(self, store_messages=False):
         self.out = sys.stderr
         self.store_messages_as_obj = store_messages
@@ -1142,6 +1246,8 @@ class DefaultRichLogger(object):
         self.prefix = ''
         self.retain_deprecated = False
         self.warn_about_fixed = False
+        self.retain_type_hints = False
+        self.coerce_meta = True 
         self.id2obj = {}
         self.annotation_event_ids_to_store = []
         self.flagged_messages = {} # id to (message obj., parent of meta)
@@ -1401,16 +1507,58 @@ class Meta(NexsonDictWrapper):
     EXPECETED_KEYS = tuple()
     PERMISSIBLE_KEYS = REQUIRED_KEYS
     def __init__(self, o, rich_logger, container=None):
+        #
+        keep_deprecated = rich_logger and rich_logger.retain_type_hints
+        p = o.get('@property')
+        if ('@xsi:type' in o):
+            warn_t = True
+            if not keep_deprecated:
+                # As per MTH email of Jan 27, 2014: purge the xsi:type be default
+                del o['@xsi:type']
+                if rich_logger and (not rich_logger.warn_about_fixed):
+                    warn_t = False
+            if warn_t:
+                rich_logger.warning(UnnecessaryAttributeWarning('@xsi:type', address=container.address_of_meta_key(p)))
+        # using presence of 'rel' attribute rather that xsi:type = nex:ResourceMeta
+        self._data_in_href = ('@rel' in o) and ('@href' in o)
+        expected_datatype = _OT_META_PROP_TO_DATATYPE.get(p, 'xsd:string')
+        stated_datatype = o.get('@datatype')
+        if stated_datatype:
+            if stated_datatype == expected_datatype:
+                warn_redundant = True
+                if keep_deprecated:
+                    del o['@datatype']
+                    if rich_logger and (not rich_logger.warn_about_fixed):
+                        warn_redundant = False
+                if rich_logger and warn_redundant:
+                    rich_logger.warning(UnnecessaryAttributeWarning('@datatype', address=container.address_of_meta_key(p)))
+            elif rich_logger:
+                rich_logger.warning(UnexpectedMetaDatatypeWarning(stated_datatype, address=container.address_of_meta_key(p)))
         NexsonDictWrapper.__init__(self, o, rich_logger, container)
+        v = self.value
+        if type(v) in _XSD_TYPE_TO_VALID_PYTHON_TYPES[expected_datatype]:
+            if stated_datatype != expected_datatype and rich_logger:
+                rich_logger.warning(IncorrectMetaDatatypeSpecifiedWarning(stated_datatype, address=container.address_of_meta_key(p)))
+        else:
+            if (rich_logger is None) or (not rich_logger.coerce_meta) or self._data_in_href:
+                rich_logger.error(IncorrectMetaDatatypeFoundWarning(type(v), expected_datatype, address=container.address_of_meta_key(p)))
+            else:
+                try:
+                    c = _XSD_TYPE_COERCION[expected_datatype](v)
+                    self._raw['$'] = c
+                    if rich_logger and rich_logger.warn_about_fixed:
+                        rich_logger.warning(MetaDatatypeCoercionWarning(v, expected_datatype, address=container.address_of_meta_key(p)))
+                except:
+                    if rich_logger:
+                        rich_logger.error(IncompatibleMetaDatatypeFoundWarning(type(v), expected_datatype, address=container.address_of_meta_key(p)))
     def get_property_name(self):
         return self._raw.get('@property')
     def set_property_name(self, v):
         self._raw['@property'] = v
     property_name = property(get_property_name, set_property_name)
     def get_property_value(self):
-        v = self._raw.get('@xsi:type')
-        if v == 'nex:ResourceMeta':
-            return self._raw.get('@href')
+        if self._data_in_href:
+            return self._raw.get('@href') # does not deal with nested meta
         return self._raw.get('$')
     value = property(get_property_value)
 
