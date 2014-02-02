@@ -13,15 +13,103 @@ import re
 VERSION = '0.0.2a'
 
 ###############################################################################
-# Code for badgerfish conversion of TreeBase XML to 
+# Code for honeybadgerfish conversion of TreeBase XML to NexSON
 ###############################################################################
-def _gen_bf_el(x):
+_SUBELEMENTS_OF_META_AS_ATT = set(['content', 'href', 'datatype', 'property', 'xsi:type', 'rel'])
+_PROPERTY_PREFIXES_FOR_META_AS_ATT = set(['ot:'])
+
+def _concatenate_text_content(x):
+    tl = []
+    ntl = []
+    for c in x.childNodes:
+        if c.nodeType == xml.dom.minidom.Node.TEXT_NODE:
+            tl.append(c)
+        else:
+            ntl.append(c)
+    try:
+        tl = [i.data for i in tl]
+        text_content = ''.join(tl)
+        text_content = text_content.strip()
+    except:
+        text_content = ''
+    return text_content, ntl
+
+def _meta_as_att(element, prop_prefixes_for_meta_as_att):
+    att_container = element.attributes
+    att_key = None
+    att_str_val = None
+    dt = 'xsd:string'
+    is_literal = None
+    rel, href = None, None
+    for i in xrange(att_container.length):
+        attr = att_container.item(i)
+        n = attr.name
+        if n not in _SUBELEMENTS_OF_META_AS_ATT:
+            return None
+        v = attr.value
+        if n == 'property':
+            for pref in prop_prefixes_for_meta_as_att:
+                if v.startswith(pref):
+                    att_key = v
+        elif n == 'xsi:type':
+            if v == 'nex:LiteralMeta':
+                is_literal = True
+            elif v == 'nex:ResourceMeta':
+                is_literal = False
+            else:
+                return None
+        elif n == 'datatype':
+            dt = v
+        elif n == 'rel':
+            rel = v
+        elif (n == 'href') or (n == 'content'):
+            if n == 'href':
+                href = v
+            att_str_val = v
+    if (is_literal is None) or (att_key is None):
+        return None
+    att_key = '@' + att_key
+    if att_str_val is None:
+        att_str_val, ntl = _concatenate_text_content(element)
+        if len(ntl) > 0: # #TODO: the case of len(ntl) == 1, is a nested meta, and should be handled.
+            return None
+    _TYPE_ERROR_MSG_FORMAT = 'Expected meta property {p} to have type {t}, but found "{v}"'
+    if is_literal:
+        if rel is not None:
+            return None # This should not happen. rel should not be in LiteralMeta
+        if dt == 'xsd:string':
+            return att_key, att_str_val
+        if dt in ['xsd:int', 'xsd:integer']:
+            try:
+                return att_key, int(att_str_val)
+            except:
+                raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
+        if dt == 'xsd:float':
+            try:
+                return att_key, float(att_str_val)
+            except:
+                raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
+        if dt == 'xsd:boolean':
+            if att_str_val.lower() in ['1', 'true']:
+                return att_key, True
+            elif att_str_val.lower() in ['0', 'false']:
+                return att_key, False
+            else:
+                raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
+        return None # We'll fall through to here when we encounter types we do not recognize
+    if (rel is None) or (href is None):
+        return None # we expect rel for every ResourceMeta
+    return att_key, {'@rel': rel, '@href': href}
+
+_PLURAL_META_TO_ATT_KEYS_LIST = ['ot:candidateTreeForSynthesis', 'ot:tag', ]
+_PLURAL_META_TO_ATT_KEYS_SET = set(_PLURAL_META_TO_ATT_KEYS_LIST)
+def _gen_hbf_el(x, prop_prefixes_for_meta_as_att):
     '''
     Builds a dictionary from the ElementTree element x
     The function
     Uses as hacky splitting of attribute or tag names using {}
         to remove namespaces.
-    returns a pair of: the tag of `x` and the badgerfish
+    returns a pair of: the tag of `x` and the honeybadgerfish
         representation of the subelements of x
     '''
     obj = {}
@@ -47,21 +135,9 @@ def _gen_bf_el(x):
     if ns_obj:
         obj['@xmlns'] = ns_obj
 
-    tl = []
-    ntl = []
     x.normalize()
     # store the text content of the element under the key '$'
-    for c in x.childNodes:
-        if c.nodeType == xml.dom.minidom.Node.TEXT_NODE:
-            tl.append(c)
-        else:
-            ntl.append(c)
-    try:
-        tl = [i.data for i in tl]
-        text_content = ''.join(tl)
-        text_content = text_content.strip()
-    except:
-        text_content = ''
+    text_content, ntl = _concatenate_text_content(x)
     if text_content:
         obj['$'] = text_content
     # accumulate a list of the children names in ko, and 
@@ -70,9 +146,20 @@ def _gen_bf_el(x):
     #   xml elements
     cd = {}
     ko = []
+    meta_as_att_list = []
+    plural_meta_as_att_dict = {}
     ks = set()
     for child in ntl:
         k = child.nodeName
+        if k == 'meta':
+            mat_obj = _meta_as_att(child, prop_prefixes_for_meta_as_att)
+            if mat_obj is not None:
+                matk, matv = mat_obj
+                if matk in _PLURAL_META_TO_ATT_KEYS_SET:
+                    plural_meta_as_att_dict.setdefault(matk, []).append(matv)
+                else:
+                    meta_as_att_list.append((matk, matv))
+                continue
         if k not in ks:
             ko.append(k)
             ks.add(k)
@@ -83,30 +170,37 @@ def _gen_bf_el(x):
             p.append(child)
         else:
             cd[k] = [p, child]
+    # add the attribute-like syntax to the obj.
+    for matk, matv in meta_as_att_list:
+        assert(matk not in obj)
+        obj[matk] = matv
+    for matk, matv in plural_meta_as_att_dict:
+        assert(matk not in obj)
+        obj[matk] = matv
+    
     # Converts the child XML elements to dicts by recursion and
     #   adds these to the dict.
     for k in ko:
         v = cd[k]
-        if isinstance(v, list):
-            dcl = []
-            ct = None
-            for xc in v:
-                ct, dc = _gen_bf_el(xc)
-                dcl.append(dc)
-        else:
-            ct, dcl = _gen_bf_el(v)
+        if not isinstance(v, list):
+            v = [v]
+        dcl = []
+        ct = None
+        for xc in v:
+            ct, dc = _gen_hbf_el(xc, prop_prefixes_for_meta_as_att)
+            dcl.append(dc)
         # this assertion will trip is the hacky stripping of namespaces
         #   results in a name clash among the tags of the children
         assert ct not in obj
         obj[ct] = dcl
     return el_name, obj
 
-def to_badgerfish_dict(src, encoding=u'utf8'):
+def to_honeybadgerfish_dict(src, encoding=u'utf8'):
     '''Takes either:
             (1) a file_object, or
             (2) (if file_object is None) a filepath and encoding
-    Returns a dictionary with the keys/values encoded according to the badgerfish convention
-    See http://badgerfish.ning.com/
+    Returns a dictionary with the keys/values encoded according to the honeybadgerfish convention
+    See https://github.com/OpenTreeOfLife/api.opentreeoflife.org/wiki/HoneyBadgerFish
 
     Caveats/bugs:
         
@@ -115,7 +209,7 @@ def to_badgerfish_dict(src, encoding=u'utf8'):
         src = codecs.open(src, 'rU', encoding=encoding)
     doc = xml.dom.minidom.parse(src)
     root = doc.documentElement
-    key, val = _gen_bf_el(root)
+    key, val = _gen_hbf_el(root, _PROPERTY_PREFIXES_FOR_META_AS_ATT)
     return {key: val}
 
 
@@ -157,7 +251,7 @@ def _add_child_list_to_ET_subtree(parent, child_list, key, key_order):
     if not isinstance(child_list, list):
         child_list = [child_list]
     for child in child_list:
-        ca, cd, cc = _break_keys_by_bf_type(child)
+        ca, cd, cc = _break_keys_by_hbf_type(child)
         if key == u'meta':
             if 'datatype' not in ca:
                 dsv = _OT_META_PROP_TO_DATATYPE.get(ca.get('property'))
@@ -189,7 +283,7 @@ def _add_ET_subtree(parent, children_dict, key_order=None):
             _add_child_list_to_ET_subtree(parent, child_list, k, None)
 
 
-def _break_keys_by_bf_type(o):
+def _break_keys_by_hbf_type(o):
     '''Breaks o into a triple two dicts and text data by key type:
         attrib keys (start with '@'),
         text (value associated with the '$' or None),
@@ -216,7 +310,7 @@ def _break_keys_by_bf_type(o):
 
 
 def bf2ET(obj_dict, key_order=None):
-    '''Converts a dict-like object that obeys the badgerfish conventions
+    '''Converts a dict-like object that obeys the honeybadgerfish conventions
     to an ElementTree.Element that represents the data in a subtree of
     XML tree.
     '''
@@ -224,8 +318,8 @@ def bf2ET(obj_dict, key_order=None):
     assert(len(base_keys) == 1)
     root_name = base_keys[0]
     root_obj = obj_dict[root_name]
-    atts, data, children = _break_keys_by_bf_type(root_obj)
-    #attrib_dict = _xml_attrib_for_bf_obj(root_obj)
+    atts, data, children = _break_keys_by_hbf_type(root_obj)
+    #attrib_dict = _xml_attrib_for_hbf_obj(root_obj)
     r = ET.Element(root_name, attrib=atts)
     if data is not None:
         r.text = unicode(data)
@@ -239,14 +333,14 @@ def write_obj_as_xml(obj_dict, file_obj):
     file_obj.write(u'\n')
 
 def get_ot_study_info_from_nexml(src, encoding=u'utf8'):
-    '''Converts an XML doc to JSON using the badgerfish convention (see to_badgerfish_dict)
+    '''Converts an XML doc to JSON using the honeybadgerfish convention (see to_honeybadgerfish_dict)
     and then prunes elements not used by open tree of life study curartion.
 
     Currently:
         removes nexml/characters @TODO: should replace it with a URI for 
             where the removed character data can be found.
     '''
-    o = to_badgerfish_dict(src)
+    o = to_honeybadgerfish_dict(src)
     try:
         if ('nexml' in o) and ('characters' in o['nexml']):
             del o['nexml']['characters']
@@ -270,14 +364,14 @@ def nexobj2ET(obj_dict, root_atts=None):
     assert(len(base_keys) == 1)
     root_name = base_keys[0]
     root_obj = obj_dict[root_name]
-    atts, data, children = _break_keys_by_bf_type(root_obj)
+    atts, data, children = _break_keys_by_hbf_type(root_obj)
     atts['generator'] = 'org.opentreeoflife.api.nexonvalidator.json2xml'
     if not 'version' in atts:
         atts['version'] = '0.9'
     if root_atts:
         for k, v in root_atts.items():
             atts[k] = v
-    #attrib_dict = _xml_attrib_for_bf_obj(root_obj)
+    #attrib_dict = _xml_attrib_for_hbf_obj(root_obj)
     r = ET.Element(root_name, attrib=atts)
     if data is not None:
         r.text = unicode(data)
@@ -334,10 +428,10 @@ def write_obj_as_nexml(obj_dict, file_obj):
     ET.ElementTree(r).write(file_obj,
                             encoding='utf-8')
     file_obj.write(u'\n')
-    
+
 
 ################################################################################
-# End of badgerfish...
+# End of honeybadgerfish...
 ################################################################################
 
 def create_validation_nexson(obj, warning_codes_to_skip, retain_deprecated=True):
@@ -410,7 +504,7 @@ def embed_refers_to_in_message(m):
     try:
         address = m[' _address'] #@TEMP hack
         del m[' _address'] #@TEMP hack
-        m['refersTo'] = convert_dict_to_badgerfish_att_dict(address.path)
+        m['refersTo'] = convert_dict_to_honeybadgerfish_att_dict(address.path)
     except:
         pass
 
@@ -563,11 +657,11 @@ def prepare_annotation(validation_logger,
         }
     message_list = []
     for m in validation_logger.errors:
-        d = m.as_badgerfish()
+        d = m.as_honeybadgerfish()
         d['@severity'] = 'ERROR'
         message_list.append(d)
     for m in validation_logger.warnings:
-        d = m.as_badgerfish()
+        d = m.as_honeybadgerfish()
         d['@severity'] = 'WARNING'
         message_list.append(d)
     for message_count, d in enumerate(message_list):
@@ -757,20 +851,20 @@ def find_target_of_nexpath(d, nexson_address, id2obj):
         return matching_el_list
     return el
 
-def convert_dict_to_badgerfish_dict(d):
+def convert_dict_to_honeybadgerfish_dict(d):
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            out[k] = convert_dict_to_badgerfish_dict(v)
+            out[k] = convert_dict_to_honeybadgerfish_dict(v)
         else:
             out[k] = {'$': v}
     return out
 
-def convert_dict_to_badgerfish_att_dict(d):
+def convert_dict_to_honeybadgerfish_att_dict(d):
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            out[k] = convert_dict_to_badgerfish_dict(v)
+            out[k] = convert_dict_to_honeybadgerfish_dict(v)
         else:
             out['@' + k] = v
     return out
@@ -825,7 +919,7 @@ class WarningMessage(object):
         if dd:
             d['data'] = dd
         return d
-    def as_badgerfish(self):
+    def as_honeybadgerfish(self):
         '''Hiding a ' _address' attribute in this object so that refersTo or the obj
         can be used later #@TEMP hack.'''
         return {
@@ -836,7 +930,7 @@ class WarningMessage(object):
         }
         dd = self.convert_data_for_json(),
         if dd:
-            d['data'] = convert_dict_to_badgerfish_dict(dd)
+            d['data'] = convert_dict_to_honeybadgerfish_dict(dd)
         return d
     def convert_data_for_json(self):
         wc = self.warning_code
