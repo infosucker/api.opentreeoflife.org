@@ -17,7 +17,6 @@ if __name__ == '__main__':
     except:
         inp = sys.stdin
     out = codecs.getwriter('utf-8')(sys.stdout)
-    
     if mode == 'xj':
         o = get_ot_study_info_from_nexml(inp)
         json.dump(o, out, indent=0, sort_keys=True)
