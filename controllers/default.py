@@ -130,7 +130,12 @@ def v1():
     def validate_and_normalize_nexson(**kwargs):
         """A wrapper around __validate() which also sorts JSON keys and checks for invalid JSON"""
         try:
-            nexson = kwargs.get('nexson', {})
+            # check for kwarg 'nexson', or load the full request body
+            if hasattr(kwargs, 'nexson'):
+                nexson = kwargs.get('nexson', {})
+            else:
+                nexson = request.body.read()
+
             if not isinstance(nexson, dict):
                 nexson = json.loads(nexson)
         except:
@@ -299,12 +304,12 @@ def v1():
             "sha":  new_sha
         }
 
-    def OPTIONS(args, **kwargs):
+    def OPTIONS(*args, **kwargs):
         "A simple method for approving CORS preflight request"
         if request.env.http_access_control_request_method:
              response.headers['Access-Control-Allow-Methods'] = request.env.http_access_control_request_method
         if request.env.http_access_control_request_headers:
              response.headers['Access-Control-Allow-Headers'] = request.env.http_access_control_request_headers
-        raise HTTP(200)
+        raise HTTP(200, **(response.headers))
 
     return locals()
