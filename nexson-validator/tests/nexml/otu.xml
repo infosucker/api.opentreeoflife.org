@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nex:nexml
+  xmlns:nex="http://www.nexml.org/2009"
+  xmlns="http://www.nexml.org/2009"
+  version="0.9"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:ot="http://purl.org/opentree/nexson"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+   <otus id="o1">
+    <otu about="#otu88801" id="otu88801" label="Ancyromonas sigmoides">
+      <meta property="ot:ottId" xsi:type="nex:LiteralMeta" datatype="xsd:integer">415973</meta>
+      <meta property="ot:originalLabel" xsi:type="nex:LiteralMeta" datatype="xsd:string">Ancyromonas sigmoides</meta>
+      <meta content="7002" datatype="xsd:long" id="meta4912423" property="tb:identifier.taxon" xsi:type="nex:LiteralMeta"/>
+    </otu>
+  </otus>
+</nex:nexml>
+
