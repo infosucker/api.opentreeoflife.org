@@ -4,6 +4,7 @@ from cStringIO import StringIO
 import xml.dom.minidom
 import datetime
 import platform
+import logging
 import codecs
 import json
 import uuid
@@ -12,98 +13,227 @@ import re
 
 VERSION = '0.0.2a'
 
+
+
+###############################################################################
+# env-sentive logging for easier debugging
+###############################################################################
+import os
+_LOGGING_LEVEL_ENVAR="NEXSON_LOGGING_LEVEL"
+_LOGGING_FORMAT_ENVAR="NEXSON_LOGGING_FORMAT"
+
+def get_logging_level():
+    if _LOGGING_LEVEL_ENVAR in os.environ:
+        if os.environ[_LOGGING_LEVEL_ENVAR].upper() == "NOTSET":
+            level = logging.NOTSET
+        elif os.environ[_LOGGING_LEVEL_ENVAR].upper() == "DEBUG":
+            level = logging.DEBUG
+        elif os.environ[_LOGGING_LEVEL_ENVAR].upper() == "INFO":
+            level = logging.INFO
+        elif os.environ[_LOGGING_LEVEL_ENVAR].upper() == "WARNING":
+            level = logging.WARNING
+        elif os.environ[_LOGGING_LEVEL_ENVAR].upper() == "ERROR":
+            level = logging.ERROR
+        elif os.environ[_LOGGING_LEVEL_ENVAR].upper() == "CRITICAL":
+            level = logging.CRITICAL
+        else:
+            level = logging.NOTSET
+    else:
+        level = logging.NOTSET
+    return level
+
+def get_logger(name="nexson"):
+    """
+    Returns a logger with name set as given, and configured
+    to the level given by the environment variable _LOGGING_LEVEL_ENVAR.
+    """
+
+#     package_dir = os.path.dirname(module_path)
+#     config_filepath = os.path.join(package_dir, _LOGGING_CONFIG_FILE)
+#     if os.path.exists(config_filepath):
+#         try:
+#             logging.config.fileConfig(config_filepath)
+#             logger_set = True
+#         except:
+#             logger_set = False
+    logger = logging.getLogger(name)
+    if not hasattr(logger, 'is_configured'):
+        logger.is_configured = False
+    if not logger.is_configured:
+        level = get_logging_level()
+        rich_formatter = logging.Formatter("[%(asctime)s] %(filename)s (%(lineno)d): %(levelname) 8s: %(message)s")
+        simple_formatter = logging.Formatter("%(levelname) 8s: %(message)s")
+        raw_formatter = logging.Formatter("%(message)s")
+        default_formatter = None
+        logging_formatter = default_formatter
+        if _LOGGING_FORMAT_ENVAR in os.environ:
+            if os.environ[_LOGGING_FORMAT_ENVAR].upper() == "RICH":
+                logging_formatter = rich_formatter
+            elif os.environ[_LOGGING_FORMAT_ENVAR].upper() == "SIMPLE":
+                logging_formatter = simple_formatter
+            elif os.environ[_LOGGING_FORMAT_ENVAR].upper() == "NONE":
+                logging_formatter = None
+            else:
+                logging_formatter = default_formatter
+        else:
+            logging_formatter = default_formatter
+        if logging_formatter is not None:
+            logging_formatter.datefmt='%H:%M:%S'
+        logger.setLevel(level)
+        ch = logging.StreamHandler()
+        ch.setLevel(level)
+        ch.setFormatter(logging_formatter)
+        logger.addHandler(ch)
+        logger.is_configured = True
+    return logger
+_LOG = get_logger()
+###############################################################################
+# End logging
+###############################################################################
+
 ###############################################################################
 # Code for honeybadgerfish conversion of TreeBase XML to NexSON
 ###############################################################################
-_SUBELEMENTS_OF_META_AS_ATT = set(['content', 'href', 'datatype', 'property', 'xsi:type', 'rel'])
-_PROPERTY_PREFIXES_FOR_META_AS_ATT = set(['ot:'])
+_PLURAL_META_TO_ATT_KEYS_LIST = ('@ot:candidateTreeForSynthesis', '@ot:tag', )
+_PLURAL_META_TO_ATT_KEYS_SET = frozenset(_PLURAL_META_TO_ATT_KEYS_LIST)
 
-def _concatenate_text_content(x):
+def _extract_text_and_child_element_list(minidom_node):
+    '''Returns a pair of the "child" content of minidom_node:
+        the first element of the pair is a concatenation of the text content
+        the second element is a list of non-text nodes.
+
+    The string concatenation strips leading and trailing whitespace from each
+    bit of text found and joins the fragments (with no separator between them).
+    '''
     tl = []
     ntl = []
-    for c in x.childNodes:
+    for c in minidom_node.childNodes:
         if c.nodeType == xml.dom.minidom.Node.TEXT_NODE:
             tl.append(c)
         else:
             ntl.append(c)
     try:
-        tl = [i.data for i in tl]
+        tl = [i.data.strip() for i in tl]
         text_content = ''.join(tl)
-        text_content = text_content.strip()
     except:
         text_content = ''
     return text_content, ntl
 
-def _meta_as_att(element, prop_prefixes_for_meta_as_att):
-    att_container = element.attributes
-    att_key = None
-    att_str_val = None
-    dt = 'xsd:string'
-    is_literal = None
-    rel, href = None, None
-    for i in xrange(att_container.length):
-        attr = att_container.item(i)
-        n = attr.name
-        if n not in _SUBELEMENTS_OF_META_AS_ATT:
+_SYNTAX_CONVENTION_FOR_META = 0
+#ot:... in parent as key -> primitive
+_USING_FEB_1_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 0
+_USING_ALT_1_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 1
+_USING_ALT_2_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 2
+_USING_ALT_3_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 3
+
+_TRANSFORM_OT_ATT_ONLY = _USING_FEB_1_CONVENTION
+
+if _TRANSFORM_OT_ATT_ONLY:
+    _ATT_DO_TRANSFORM_FILTER_FN = lambda x : x.startswith('ot:')
+else:
+    _ATT_DO_TRANSFORM_FILTER_FN = lambda x : True
+
+_SUBELEMENTS_OF_LITERAL_META_AS_ATT = frozenset(['content', 'datatype', 'property', 'xsi:type', 'id'])
+_SUBELEMENTS_OF_RESOURCE_META_AS_ATT = frozenset(['href', 'xsi:type', 'rel', 'id'])
+_PROPERTY_PREFIXES_FOR_META_AS_ATT = frozenset(['ot:'])
+
+def _meta_as_att(minidom_meta_element, att_do_transform_filter_fn):
+    '''Checks if the minidom_meta_element can be represented as a
+        key/value pair in a object.
+
+    Returns (key, value) ready for JSON serialization, OR
+            `None` if the element can not be treated as simple pair.
+    If `None` is returned, then more literal translation of the 
+        object may be required.
+    '''
+    xt = minidom_meta_element.getAttribute('xsi:type')
+    att_container = minidom_meta_element.attributes
+    if xt == 'nex:LiteralMeta':
+        att_key = None
+        att_str_val = None
+        dt = 'xsd:string'
+        att_key = minidom_meta_element.getAttribute('property')
+        if att_key is None:
+            _LOG.debug('"property" missing from literal meta')
             return None
-        v = attr.value
-        if n == 'property':
-            for pref in prop_prefixes_for_meta_as_att:
-                if v.startswith(pref):
-                    att_key = v
-        elif n == 'xsi:type':
-            if v == 'nex:LiteralMeta':
-                is_literal = True
-            elif v == 'nex:ResourceMeta':
-                is_literal = False
-            else:
+        el_id = None
+        if not att_do_transform_filter_fn(att_key):
+            _LOG.debug('Attributes of property "{p}" are not transformed'.format(p=att_key))
+            return None
+        for i in xrange(att_container.length):
+            attr = att_container.item(i)
+            n = attr.name
+            if n not in _SUBELEMENTS_OF_LITERAL_META_AS_ATT:
+                _LOG.debug('"{n}" not a literal meta type to be transformed'.format(n=n))
                 return None
-        elif n == 'datatype':
-            dt = v
-        elif n == 'rel':
-            rel = v
-        elif (n == 'href') or (n == 'content'):
-            if n == 'href':
-                href = v
-            att_str_val = v
-    if (is_literal is None) or (att_key is None):
-        return None
-    att_key = '@' + att_key
-    if att_str_val is None:
-        att_str_val, ntl = _concatenate_text_content(element)
-        if len(ntl) > 0: # #TODO: the case of len(ntl) == 1, is a nested meta, and should be handled.
-            return None
-    _TYPE_ERROR_MSG_FORMAT = 'Expected meta property {p} to have type {t}, but found "{v}"'
-    if is_literal:
-        if rel is not None:
-            return None # This should not happen. rel should not be in LiteralMeta
+            if n == 'datatype':
+                dt = attr.value
+            elif n == 'content':
+                att_str_val = attr.value
+            elif n == 'id':
+                el_id = attr.value
+        if att_str_val is None:
+            att_str_val, ntl = _extract_text_and_child_element_list(minidom_meta_element)
+            if len(ntl) > 0: # #TODO: the case of len(ntl) == 1, is a nested meta, and should be handled.
+                _LOG.debug('Nested meta elements are not legal for LiteralMeta (offending property={p}'.format(p=att_key))
+                return None
+        att_key = '@' + att_key
+        _TYPE_ERROR_MSG_FORMAT = 'Expected meta property {p} to have type {t}, but found "{v}"'
         if dt == 'xsd:string':
             return att_key, att_str_val
-        if dt in ['xsd:int', 'xsd:integer']:
+        if dt in frozenset(['xsd:int', 'xsd:integer', 'xsd:long']):
             try:
                 return att_key, int(att_str_val)
             except:
                 raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
-        if dt == 'xsd:float':
+        if dt == frozenset(['xsd:float', 'xsd:double']):
             try:
                 return att_key, float(att_str_val)
             except:
                 raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
         if dt == 'xsd:boolean':
-            if att_str_val.lower() in ['1', 'true']:
+            if att_str_val.lower() in frozenset(['1', 'true']):
                 return att_key, True
-            elif att_str_val.lower() in ['0', 'false']:
+            elif att_str_val.lower() in frozenset(['0', 'false']):
                 return att_key, False
             else:
                 raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
         return None # We'll fall through to here when we encounter types we do not recognize
-    if (rel is None) or (href is None):
-        return None # we expect rel for every ResourceMeta
-    return att_key, {'@rel': rel, '@href': href}
+    elif xt == 'nex:ResourceMeta':
+        rel = minidom_meta_element.getAttribute('rel')
+        if rel is None:
+            _LOG.debug('"rel" missing from ResourceMeta')
+            return None
+        href = minidom_meta_element.getAttribute('href')
+        el_id = None
+        for i in xrange(att_container.length):
+            attr = att_container.item(i)
+            n = attr.name
+            if n not in _SUBELEMENTS_OF_RESOURCE_META_AS_ATT:
+                _LOG.debug('"{n}" not a meta type to be transformed'.format(n=n))
+                return None
+        if not att_do_transform_filter_fn(rel):
+            _LOG.debug('Attributes of property "{p}" are not transformed'.format(p=rel))
+            return None
+        rel = '@' + rel
+        att_str_val, ntl = _extract_text_and_child_element_list(minidom_meta_element)
+        if att_str_val:
+            _LOG.debug('text content of ResourceMeta of rel="{r}"'.format(r=rel))
+            return None
+        if ntl:
+            sys.exit('handling nested metas is a TODO\n')
+        if href is None:
+            _LOG.debug('ResourceMeta of rel="{r}" without an "href" attribute'.format(r=rel))
+            return None
+        if (rel is None) or (href is None):
+            return None # we expect rel for every ResourceMeta
+        return rel, {'@href': href}
+    else:
+        _LOG.debug('xsi:type attribute not LiteralMeta or ResourceMeta')
+        return None
 
-_PLURAL_META_TO_ATT_KEYS_LIST = ['ot:candidateTreeForSynthesis', 'ot:tag', ]
-_PLURAL_META_TO_ATT_KEYS_SET = set(_PLURAL_META_TO_ATT_KEYS_LIST)
-def _gen_hbf_el(x, prop_prefixes_for_meta_as_att):
+
+def _gen_hbf_el(x, att_do_transform_filter_fn):
     '''
     Builds a dictionary from the ElementTree element x
     The function
@@ -137,7 +267,7 @@ def _gen_hbf_el(x, prop_prefixes_for_meta_as_att):
 
     x.normalize()
     # store the text content of the element under the key '$'
-    text_content, ntl = _concatenate_text_content(x)
+    text_content, ntl = _extract_text_and_child_element_list(x)
     if text_content:
         obj['$'] = text_content
     # accumulate a list of the children names in ko, and 
@@ -152,7 +282,7 @@ def _gen_hbf_el(x, prop_prefixes_for_meta_as_att):
     for child in ntl:
         k = child.nodeName
         if k == 'meta':
-            mat_obj = _meta_as_att(child, prop_prefixes_for_meta_as_att)
+            mat_obj = _meta_as_att(child, att_do_transform_filter_fn)
             if mat_obj is not None:
                 matk, matv = mat_obj
                 if matk in _PLURAL_META_TO_ATT_KEYS_SET:
@@ -172,14 +302,16 @@ def _gen_hbf_el(x, prop_prefixes_for_meta_as_att):
             cd[k] = [p, child]
     # add the attribute-like syntax to the obj.
     for matk, matv in meta_as_att_list:
-        assert(matk not in obj)
+        if matk in obj:
+            print matk
+            assert(matk not in obj)
         obj[matk] = matv
-    for matk, matv in plural_meta_as_att_dict:
+    for matk, matv in plural_meta_as_att_dict.items():
         assert(matk not in obj)
         obj[matk] = matv
     
     # Converts the child XML elements to dicts by recursion and
-    #   adds these to the dict.
+    #   adds these to the dict.att_do_transform_filter_fn
     for k in ko:
         v = cd[k]
         if not isinstance(v, list):
@@ -187,7 +319,7 @@ def _gen_hbf_el(x, prop_prefixes_for_meta_as_att):
         dcl = []
         ct = None
         for xc in v:
-            ct, dc = _gen_hbf_el(xc, prop_prefixes_for_meta_as_att)
+            ct, dc = _gen_hbf_el(xc, att_do_transform_filter_fn)
             dcl.append(dc)
         # this assertion will trip is the hacky stripping of namespaces
         #   results in a name clash among the tags of the children
@@ -209,7 +341,7 @@ def to_honeybadgerfish_dict(src, encoding=u'utf8'):
         src = codecs.open(src, 'rU', encoding=encoding)
     doc = xml.dom.minidom.parse(src)
     root = doc.documentElement
-    key, val = _gen_hbf_el(root, _PROPERTY_PREFIXES_FOR_META_AS_ATT)
+    key, val = _gen_hbf_el(root, _ATT_DO_TRANSFORM_FILTER_FN)
     return {key: val}
 
 
