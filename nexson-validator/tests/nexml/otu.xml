@@ -5,13 +5,28 @@
   version="0.9"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:ot="http://purl.org/opentree/nexson"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
-   <otus id="o1">
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:tb="http://purl.org/phylo/treebase/2.0/terms#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#">
+   <meta property="ot:tag" xsi:type="nex:LiteralMeta" datatype="xsd:string">cpDNA</meta>
+   <meta property="ot:tag" xsi:type="nex:LiteralMeta" datatype="xsd:string">ingroup added</meta>
+   <meta property="ot:candidateTreeForSynthesis" xsi:type="nex:LiteralMeta" datatype="xsd:string">tr1</meta>
+   <otus id="ob1">
     <otu about="#otu88801" id="otu88801" label="Ancyromonas sigmoides">
       <meta property="ot:ottId" xsi:type="nex:LiteralMeta" datatype="xsd:integer">415973</meta>
       <meta property="ot:originalLabel" xsi:type="nex:LiteralMeta" datatype="xsd:string">Ancyromonas sigmoides</meta>
-      <meta content="7002" datatype="xsd:long" id="meta4912423" property="tb:identifier.taxon" xsi:type="nex:LiteralMeta"/>
+      <meta href="http://dx.doi.org/10.3732/ajb.94.12.2026" rel="ot:studyPublication" xsi:type="nex:ResourceMeta"/>
+      <meta content="7002" datatype="xsd:long" id="m0" property="tb:identifier.taxon" xsi:type="nex:LiteralMeta"/>
+      <meta href="http://purl.uniprot.org/taxonomy/94215" id="meta4912509" rel="skos:closeMatch" xsi:type="nex:ResourceMeta"/>
+      <meta href="http://purl.uniprot.org/taxonomy/102624" id="meta4912517" rel="skos:closeMatch" xsi:type="nex:ResourceMeta"/>
     </otu>
   </otus>
+  <trees id="tb1" otus="ob1">
+    <tree id="tr1"  xsi:type="nex:FloatTree">
+      <node id="n1" otu="otu88801"/>
+      <node id="n0"/>
+      <edge id="e0" source="n0" target="n1"/>
+    </tree>
+  </trees>
 </nex:nexml>
 
