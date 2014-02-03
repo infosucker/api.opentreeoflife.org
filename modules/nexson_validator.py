@@ -13,8 +13,6 @@ import re
 
 VERSION = '0.0.2a'
 
-
-
 ###############################################################################
 # env-sentive logging for easier debugging
 ###############################################################################
@@ -94,6 +92,21 @@ _LOG = get_logger()
 ###############################################################################
 # Code for honeybadgerfish conversion of TreeBase XML to NexSON
 ###############################################################################
+
+def _debug_dump_dom(el):
+    s = [el.nodeName]
+
+    att_container = el.attributes
+    for i in xrange(att_container.length):
+        attr = att_container.item(i)
+        s.append('  @{a}="{v}"'.format(a=attr.name, v=attr.value))
+    for c in el.childNodes:
+        if c.nodeType == xml.dom.minidom.Node.TEXT_NODE:
+            s.append('  {a} type="TEXT" data="{d}"'.format(a=c.nodeName, d=c.data))
+        else:
+            s.append('  {a} child'.format(a=c.nodeName))
+    return '\n'.join(s)
+        
 _PLURAL_META_TO_ATT_KEYS_LIST = ('@ot:candidateTreeForSynthesis', '@ot:tag', )
 _PLURAL_META_TO_ATT_KEYS_SET = frozenset(_PLURAL_META_TO_ATT_KEYS_LIST)
 
@@ -107,7 +120,12 @@ def _extract_text_and_child_element_list(minidom_node):
     '''
     tl = []
     ntl = []
+    #try:
+    #    _LOG.debug('Node dump: {d}'.format(d=_debug_dump_dom(minidom_node)))
+    #except:
+    #    pass
     for c in minidom_node.childNodes:
+        
         if c.nodeType == xml.dom.minidom.Node.TEXT_NODE:
             tl.append(c)
         else:
@@ -127,17 +145,148 @@ _USING_ALT_2_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 2
 _USING_ALT_3_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 3
 
 _TRANSFORM_OT_ATT_ONLY = _USING_FEB_1_CONVENTION
+_ALL_UNKNOWN_META_CHILDREN_AS_ARRAYS = True
 
 if _TRANSFORM_OT_ATT_ONLY:
     _ATT_DO_TRANSFORM_FILTER_FN = lambda x : x.startswith('ot:')
 else:
     _ATT_DO_TRANSFORM_FILTER_FN = lambda x : True
 
+class ATT_TRANSFORM_CODE:
+    PREVENT_TRANSFORMATION, IN_FULL_OBJECT, HANDLED, CULL = range(4)
+
 _SUBELEMENTS_OF_LITERAL_META_AS_ATT = frozenset(['content', 'datatype', 'property', 'xsi:type', 'id'])
+_HANDLED_SUBELEMENTS_OF_LITERAL_META_AS_ATT = frozenset(['content', 'datatype', 'property', 'xsi:type'])
+def _cull_non_id_subelement_handler(name):
+    if name in _HANDLED_SUBELEMENTS_OF_LITERAL_META_AS_ATT:
+        return ATT_TRANSFORM_CODE.HANDLED, None
+    if name == 'id':
+        return ATT_TRANSFORM_CODE.IN_FULL_OBJECT, '@' + name
+    return ATT_TRANSFORM_CODE.PREVENT_TRANSFORMATION, name
+
 _SUBELEMENTS_OF_RESOURCE_META_AS_ATT = frozenset(['href', 'xsi:type', 'rel', 'id'])
+_HANDLED_SUBELEMENTS_OF_RESOURCE_META_AS_ATT = frozenset(['xsi:type', 'rel'])
+_OBJ_PROP_SUBELEMENTS_OF_RESOURCE_META_AS_ATT = frozenset(['href', 'id'])
+def _cull_non_id_or_href(name):
+    if name in _HANDLED_SUBELEMENTS_OF_RESOURCE_META_AS_ATT:
+        return ATT_TRANSFORM_CODE.HANDLED, None
+    if name in _OBJ_PROP_SUBELEMENTS_OF_RESOURCE_META_AS_ATT:
+        return ATT_TRANSFORM_CODE.IN_FULL_OBJECT, '@' + name
+    return ATT_TRANSFORM_CODE.PREVENT_TRANSFORMATION, name
+
+_SUBELEMENTS_OF_LITERAL_META_DECISION_FN = _cull_non_id_subelement_handler
+_SUBELEMENTS_OF_RESOURCE_META_DECISION_FN = _cull_non_id_or_href
+
 _PROPERTY_PREFIXES_FOR_META_AS_ATT = frozenset(['ot:'])
 
-def _meta_as_att(minidom_meta_element, att_do_transform_filter_fn):
+class NexmlTypeError(Exception):
+    def __init__(self, m):
+        self.m = m
+    def __str__(self):
+        return self.m
+
+def _coerce_literal_val_to_primitive(datatype, str_val):
+    _TYPE_ERROR_MSG_FORMAT = 'Expected meta property {p} to have type {t}, but found "{v}"'
+    if datatype == 'xsd:string':
+        return str_val
+    if datatype in frozenset(['xsd:int', 'xsd:integer', 'xsd:long']):
+        try:
+            return int(str_val)
+        except:
+            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=datatype, v=str_val))
+    elif datatype == frozenset(['xsd:float', 'xsd:double']):
+        try:
+            return float(str_val)
+        except:
+            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=datatype, v=str_val))
+    elif datatype == 'xsd:boolean':
+        if str_val.lower() in frozenset(['1', 'true']):
+            return True
+        elif str_val.lower() in frozenset(['0', 'false']):
+            return False
+        else:
+            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=datatype, v=str_val))
+    else:
+        _LOG.debug('unknown xsi:type {t}'.format(t=datatype))
+        return None # We'll fall through to here when we encounter types we do not recognize
+
+def _literal_meta_to_key_value(minidom_meta_element, 
+                               att_do_transform_filter_fn,
+                               subel_decider_fn,
+                               resource_meta_subel_decider_fn):
+    att_key = None
+    dt = minidom_meta_element.getAttribute('datatype') or 'xsd:string'
+    att_str_val = minidom_meta_element.getAttribute('content')
+    att_key = minidom_meta_element.getAttribute('property')
+    full_obj = {}
+    if att_key is None:
+        _LOG.debug('"property" missing from literal meta')
+        return None
+    el_id = None
+    if not att_do_transform_filter_fn(att_key):
+        _LOG.debug('Attributes of property "{p}" are not transformed'.format(p=att_key))
+        return None
+    att_container = minidom_meta_element.attributes
+    for i in xrange(att_container.length):
+        attr = att_container.item(i)
+        handling_code, new_name = subel_decider_fn(attr.name)
+        if handling_code == ATT_TRANSFORM_CODE.PREVENT_TRANSFORMATION:
+            _LOG.debug('A "{n}" property in a literal meta prevents'.format(n=new_name))
+            return None
+        if handling_code == ATT_TRANSFORM_CODE.IN_FULL_OBJECT:
+            full_obj[new_name] = attr.value
+    if not att_str_val:
+        att_str_val, ntl = _extract_text_and_child_element_list(minidom_meta_element)
+        if len(ntl) > 0: # #TODO: the case of len(ntl) == 1, is a nested meta, and should be handled.
+            _LOG.debug('Nested meta elements are not legal for LiteralMeta (offending property={p}'.format(p=att_key))
+            return None
+    att_key = '@' + att_key
+    trans_val = _coerce_literal_val_to_primitive(dt, att_str_val)
+    if trans_val is None:
+        return None
+    if full_obj:
+        full_obj['$'] = trans_val
+        return att_key, full_obj
+    return att_key, trans_val
+
+def _resource_meta_to_key_value(minidom_meta_element, 
+                                att_do_transform_filter_fn,
+                                literal_meta_subel_decider_fn,
+                                subel_decider_fn):
+    rel = minidom_meta_element.getAttribute('rel')
+    if rel is None:
+        _LOG.debug('"rel" missing from ResourceMeta')
+        return None
+    full_obj = {}
+    el_id = None
+    att_container = minidom_meta_element.attributes
+    for i in xrange(att_container.length):
+        attr = att_container.item(i)
+        handling_code, new_name = subel_decider_fn(attr.name)
+        if handling_code == ATT_TRANSFORM_CODE.PREVENT_TRANSFORMATION:
+            _LOG.debug('A "{n}" property in a literal meta prevents'.format(n=new_name))
+            return None
+        if handling_code == ATT_TRANSFORM_CODE.IN_FULL_OBJECT:
+            full_obj[new_name] = attr.value
+    if not att_do_transform_filter_fn(rel):
+        _LOG.debug('Attributes of property "{p}" are not transformed'.format(p=rel))
+        return None
+    rel = '@' + rel
+    att_str_val, ntl = _extract_text_and_child_element_list(minidom_meta_element)
+    if att_str_val:
+        _LOG.debug('text content of ResourceMeta of rel="{r}"'.format(r=rel))
+        return None
+    if ntl:
+        sys.exit('handling nested metas is a TODO\n')
+    if not full_obj:
+        _LOG.debug('ResourceMeta of rel="{r}" without condents ("href" attribute or nested meta)'.format(r=rel))
+        return None
+    return rel, full_obj
+
+def _meta_to_key_value(minidom_meta_element, 
+                       att_do_transform_filter_fn,
+                       literal_meta_subel_decider_fn,
+                       resource_meta_subel_decider_fn):
     '''Checks if the minidom_meta_element can be represented as a
         key/value pair in a object.
 
@@ -147,87 +296,16 @@ def _meta_as_att(minidom_meta_element, att_do_transform_filter_fn):
         object may be required.
     '''
     xt = minidom_meta_element.getAttribute('xsi:type')
-    att_container = minidom_meta_element.attributes
     if xt == 'nex:LiteralMeta':
-        att_key = None
-        att_str_val = None
-        dt = 'xsd:string'
-        att_key = minidom_meta_element.getAttribute('property')
-        if att_key is None:
-            _LOG.debug('"property" missing from literal meta')
-            return None
-        el_id = None
-        if not att_do_transform_filter_fn(att_key):
-            _LOG.debug('Attributes of property "{p}" are not transformed'.format(p=att_key))
-            return None
-        for i in xrange(att_container.length):
-            attr = att_container.item(i)
-            n = attr.name
-            if n not in _SUBELEMENTS_OF_LITERAL_META_AS_ATT:
-                _LOG.debug('"{n}" not a literal meta type to be transformed'.format(n=n))
-                return None
-            if n == 'datatype':
-                dt = attr.value
-            elif n == 'content':
-                att_str_val = attr.value
-            elif n == 'id':
-                el_id = attr.value
-        if att_str_val is None:
-            att_str_val, ntl = _extract_text_and_child_element_list(minidom_meta_element)
-            if len(ntl) > 0: # #TODO: the case of len(ntl) == 1, is a nested meta, and should be handled.
-                _LOG.debug('Nested meta elements are not legal for LiteralMeta (offending property={p}'.format(p=att_key))
-                return None
-        att_key = '@' + att_key
-        _TYPE_ERROR_MSG_FORMAT = 'Expected meta property {p} to have type {t}, but found "{v}"'
-        if dt == 'xsd:string':
-            return att_key, att_str_val
-        if dt in frozenset(['xsd:int', 'xsd:integer', 'xsd:long']):
-            try:
-                return att_key, int(att_str_val)
-            except:
-                raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
-        if dt == frozenset(['xsd:float', 'xsd:double']):
-            try:
-                return att_key, float(att_str_val)
-            except:
-                raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
-        if dt == 'xsd:boolean':
-            if att_str_val.lower() in frozenset(['1', 'true']):
-                return att_key, True
-            elif att_str_val.lower() in frozenset(['0', 'false']):
-                return att_key, False
-            else:
-                raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=dt, v=att_str_val))
-        return None # We'll fall through to here when we encounter types we do not recognize
+        return _literal_meta_to_key_value(minidom_meta_element,
+                                          att_do_transform_filter_fn,
+                                          literal_meta_subel_decider_fn,
+                                          resource_meta_subel_decider_fn)
     elif xt == 'nex:ResourceMeta':
-        rel = minidom_meta_element.getAttribute('rel')
-        if rel is None:
-            _LOG.debug('"rel" missing from ResourceMeta')
-            return None
-        href = minidom_meta_element.getAttribute('href')
-        el_id = None
-        for i in xrange(att_container.length):
-            attr = att_container.item(i)
-            n = attr.name
-            if n not in _SUBELEMENTS_OF_RESOURCE_META_AS_ATT:
-                _LOG.debug('"{n}" not a meta type to be transformed'.format(n=n))
-                return None
-        if not att_do_transform_filter_fn(rel):
-            _LOG.debug('Attributes of property "{p}" are not transformed'.format(p=rel))
-            return None
-        rel = '@' + rel
-        att_str_val, ntl = _extract_text_and_child_element_list(minidom_meta_element)
-        if att_str_val:
-            _LOG.debug('text content of ResourceMeta of rel="{r}"'.format(r=rel))
-            return None
-        if ntl:
-            sys.exit('handling nested metas is a TODO\n')
-        if href is None:
-            _LOG.debug('ResourceMeta of rel="{r}" without an "href" attribute'.format(r=rel))
-            return None
-        if (rel is None) or (href is None):
-            return None # we expect rel for every ResourceMeta
-        return rel, {'@href': href}
+        return _resource_meta_to_key_value(minidom_meta_element,
+                                           att_do_transform_filter_fn,
+                                           literal_meta_subel_decider_fn,
+                                           resource_meta_subel_decider_fn)
     else:
         _LOG.debug('xsi:type attribute not LiteralMeta or ResourceMeta')
         return None
@@ -278,18 +356,35 @@ def _gen_hbf_el(x, att_do_transform_filter_fn):
     ko = []
     meta_as_att_list = []
     plural_meta_as_att_dict = {}
+    in_place_meta_el = {}
     ks = set()
     for child in ntl:
         k = child.nodeName
         if k == 'meta':
-            mat_obj = _meta_as_att(child, att_do_transform_filter_fn)
+            mat_obj = _meta_to_key_value(child,
+                                         att_do_transform_filter_fn,
+                                         _SUBELEMENTS_OF_LITERAL_META_DECISION_FN,
+                                         _SUBELEMENTS_OF_RESOURCE_META_DECISION_FN)
             if mat_obj is not None:
                 matk, matv = mat_obj
                 if matk in _PLURAL_META_TO_ATT_KEYS_SET:
                     plural_meta_as_att_dict.setdefault(matk, []).append(matv)
                 else:
                     meta_as_att_list.append((matk, matv))
-                continue
+            else:
+                mat_obj = _meta_to_key_value(child,
+                                             lambda x: True,
+                                             _SUBELEMENTS_OF_LITERAL_META_DECISION_FN,
+                                             _SUBELEMENTS_OF_RESOURCE_META_DECISION_FN)
+                assert (mat_obj is not None)
+                matk, matv = mat_obj
+                if _ALL_UNKNOWN_META_CHILDREN_AS_ARRAYS:
+                    in_place_meta_el.setdefault(matk, []).append(matv)
+                else:
+                    raise NotImplementedError("BadgerFish style handling of meta")
+
+            continue
+
         if k not in ks:
             ko.append(k)
             ks.add(k)
@@ -309,7 +404,8 @@ def _gen_hbf_el(x, att_do_transform_filter_fn):
     for matk, matv in plural_meta_as_att_dict.items():
         assert(matk not in obj)
         obj[matk] = matv
-    
+    if in_place_meta_el:
+        obj['meta'] = in_place_meta_el
     # Converts the child XML elements to dicts by recursion and
     #   adds these to the dict.att_do_transform_filter_fn
     for k in ko:
