@@ -137,20 +137,31 @@ def _extract_text_and_child_element_list(minidom_node):
         text_content = ''
     return text_content, ntl
 
-_SYNTAX_CONVENTION_FOR_META = 0
+_SYNTAX_CONVENTION_FOR_META = 3
 #ot:... in parent as key -> primitive
 _USING_FEB_1_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 0
 _USING_ALT_1_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 1
 _USING_ALT_2_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 2
 _USING_ALT_3_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 3
 
-_TRANSFORM_OT_ATT_ONLY = _USING_FEB_1_CONVENTION
-_ALL_UNKNOWN_META_CHILDREN_AS_ARRAYS = True
+_TRANSFORM_OT_ATT_ONLY = _USING_FEB_1_CONVENTION or _USING_ALT_3_CONVENTION
+_TRANSFORM_ALL_ATT = False
+_TRANSFORM_NO_ATTS = not _TRANSFORM_OT_ATT_ONLY
+
+_FORCE_FULL_OBJECT_FOR_META = _USING_ALT_2_CONVENTION
+
+_ALL_UNTRANSFORMED_META_CHILDREN_AS_ARRAYS = not (_USING_ALT_1_CONVENTION or _USING_ALT_2_CONVENTION)
+if not _ALL_UNTRANSFORMED_META_CHILDREN_AS_ARRAYS:
+    _TREAT_ATT_AS_ARRAY_FN = lambda x : (x in _PLURAL_META_TO_ATT_KEYS_SET) or (not x.startswith('@ot:'))
 
 if _TRANSFORM_OT_ATT_ONLY:
     _ATT_DO_TRANSFORM_FILTER_FN = lambda x : x.startswith('ot:')
-else:
+elif _TRANSFORM_ALL_ATT:
     _ATT_DO_TRANSFORM_FILTER_FN = lambda x : True
+elif _TRANSFORM_NO_ATTS:
+    _ATT_DO_TRANSFORM_FILTER_FN = lambda x : False
+
+_PROMOTE_ALL_NON_NONE = not _USING_ALT_3_CONVENTION
 
 class ATT_TRANSFORM_CODE:
     PREVENT_TRANSFORMATION, IN_FULL_OBJECT, HANDLED, CULL = range(4)
@@ -244,7 +255,7 @@ def _literal_meta_to_key_value(minidom_meta_element,
     trans_val = _coerce_literal_val_to_primitive(dt, att_str_val)
     if trans_val is None:
         return None
-    if full_obj:
+    if full_obj or _FORCE_FULL_OBJECT_FOR_META:
         full_obj['$'] = trans_val
         return att_key, full_obj
     return att_key, trans_val
@@ -365,7 +376,8 @@ def _gen_hbf_el(x, att_do_transform_filter_fn):
                                          att_do_transform_filter_fn,
                                          _SUBELEMENTS_OF_LITERAL_META_DECISION_FN,
                                          _SUBELEMENTS_OF_RESOURCE_META_DECISION_FN)
-            if mat_obj is not None:
+            promotion_possible = _PROMOTE_ALL_NON_NONE or (mat_obj and ((not isinstance(mat_obj[1], dict)) or ('$' not in mat_obj[1])))
+            if (mat_obj is not None) and promotion_possible:
                 matk, matv = mat_obj
                 if matk in _PLURAL_META_TO_ATT_KEYS_SET:
                     plural_meta_as_att_dict.setdefault(matk, []).append(matv)
@@ -373,15 +385,17 @@ def _gen_hbf_el(x, att_do_transform_filter_fn):
                     meta_as_att_list.append((matk, matv))
             else:
                 mat_obj = _meta_to_key_value(child,
-                                             lambda x: True,
+                                             lambda x: True, # generate the same form of element, for any property type. These will be in a meta object...
                                              _SUBELEMENTS_OF_LITERAL_META_DECISION_FN,
                                              _SUBELEMENTS_OF_RESOURCE_META_DECISION_FN)
                 assert (mat_obj is not None)
                 matk, matv = mat_obj
-                if _ALL_UNKNOWN_META_CHILDREN_AS_ARRAYS:
+                if _ALL_UNTRANSFORMED_META_CHILDREN_AS_ARRAYS or _TREAT_ATT_AS_ARRAY_FN(matk):
                     in_place_meta_el.setdefault(matk, []).append(matv)
                 else:
-                    raise NotImplementedError("BadgerFish style handling of meta")
+                    print matk
+                    assert(matk not in in_place_meta_el)
+                    in_place_meta_el[matk] = matv
 
             continue
 

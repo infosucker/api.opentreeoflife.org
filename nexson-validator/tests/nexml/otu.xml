@@ -14,7 +14,7 @@
    <otus id="ob1">
     <otu about="#otu88801" id="otu88801" label="Ancyromonas sigmoides">
       <meta property="ot:ottId" xsi:type="nex:LiteralMeta" datatype="xsd:integer">415973</meta>
-      <meta property="ot:originalLabel" xsi:type="nex:LiteralMeta" datatype="xsd:string">Ancyromonas sigmoides</meta>
+      <meta property="ot:originalLabel" xsi:type="nex:LiteralMeta" id="bogus" datatype="xsd:string">Ancyromonas sigmoides</meta>
       <meta href="http://dx.doi.org/10.3732/ajb.94.12.2026" rel="ot:studyPublication" xsi:type="nex:ResourceMeta"/>
       <meta content="7002" datatype="xsd:long" id="m0" property="tb:identifier.taxon" xsi:type="nex:LiteralMeta"/>
       <meta href="http://purl.uniprot.org/taxonomy/94215" id="meta4912509" rel="skos:closeMatch" xsi:type="nex:ResourceMeta"/>
