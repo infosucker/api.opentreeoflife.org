@@ -10,7 +10,7 @@ import uuid
 import sys
 import re
 
-VERSION = '0.0.2a'
+VERSION = '0.0.3a'
 
 
 ###############################################################################
@@ -254,7 +254,7 @@ def _resource_transform_meta_key_value(minidom_meta_element):
         _LOG.debug('text content of ResourceMeta of rel="{r}"'.format(r=rel))
         return None
     if ntl:
-        sys.exit('handling nested metas is a TODO\n')
+        raise NotImplementedError('handling nested metas is a TODO\n')
     if not full_obj:
         _LOG.debug('ResourceMeta of rel="{r}" without condents ("href" attribute or nested meta)'.format(r=rel))
         return None
