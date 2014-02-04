@@ -20,7 +20,6 @@
 "@id": "ob1", 
 "otu": [
 {
-"@about": "#otu88801", 
 "@id": "otu88801", 
 "@label": "Ancyromonas sigmoides", 
 "^ot:originalLabel": {

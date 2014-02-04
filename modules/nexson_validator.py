@@ -349,6 +349,13 @@ def _gen_hbf_el(x):
         #   results in a name clash among the tags of the children
         assert ct not in obj
         obj[ct] = dcl
+
+    # delete redundant about attributes that are used in XML, but not JSON (last rule of HoneyBadgerFish)
+    about_val = obj.get('@about')
+    if about_val:
+        id_val = obj.get('@id')
+        if id_val and (('#' + id_val) == about_val):
+            del obj['@about']
     return el_name, obj
 
 def to_honeybadgerfish_dict(src, encoding=u'utf8'):
@@ -571,7 +578,7 @@ def _nex_obj_2_nexml_doc(doc, obj_dict, root_atts=None):
     root_name = base_keys[0]
     root_obj = obj_dict[root_name]
     atts, data, children, meta_children = _break_keys_by_hbf_type(root_obj)
-    atts['generator'] = 'org.opentreeoflife.api.nexonvalidator.json2xml'
+    atts['generator'] = 'org.opentreeoflife.api.nexsonvalidator.nexson_nexml'
     if not 'version' in atts:
         atts['version'] = '0.9'
     if root_atts:
