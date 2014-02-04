@@ -12,9 +12,14 @@ import re
 
 VERSION = '0.0.2a'
 
+
 ###############################################################################
+# Code for honeybadgerfish conversion of TreeBase XML to NexSON
+###############################################################################
+
+##########################################
 # env-sentive logging for easier debugging
-###############################################################################
+##########################################
 import os
 _LOGGING_LEVEL_ENVAR="NEXSON_LOGGING_LEVEL"
 _LOGGING_FORMAT_ENVAR="NEXSON_LOGGING_FORMAT"
@@ -84,17 +89,17 @@ def get_logger(name="nexson"):
         logger.is_configured = True
     return logger
 _LOG = get_logger()
-###############################################################################
-# End logging
-###############################################################################
+##########################################
+# end env-sentive logging
+##########################################
 
-###############################################################################
-# Code for honeybadgerfish conversion of TreeBase XML to NexSON
-###############################################################################
+# unused cruft. Useful if we decide that some ot:... attributes should always map to arrays.
+_PLURAL_META_TO_ATT_KEYS_LIST = ('@ot:candidateTreeForSynthesis', '@ot:tag', )
+_PLURAL_META_TO_ATT_KEYS_SET = frozenset(_PLURAL_META_TO_ATT_KEYS_LIST)
 
 def _debug_dump_dom(el):
+    '''Debugging helper. Prints out `el` contents.'''
     s = [el.nodeName]
-
     att_container = el.attributes
     for i in xrange(att_container.length):
         attr = att_container.item(i)
@@ -105,9 +110,23 @@ def _debug_dump_dom(el):
         else:
             s.append('  {a} child'.format(a=c.nodeName))
     return '\n'.join(s)
-        
-_PLURAL_META_TO_ATT_KEYS_LIST = ('@ot:candidateTreeForSynthesis', '@ot:tag', )
-_PLURAL_META_TO_ATT_KEYS_SET = frozenset(_PLURAL_META_TO_ATT_KEYS_LIST)
+
+def _add_value_to_dict_bf(d, k, v):
+    '''Adds the `k`->`v` mapping to `d`, but if a previous element exists it changes
+    the value of for the key to list. 
+
+    This is used in the BadgerFish mapping convention.
+
+    This is a simple multi-dict that is only suitable when you know that you'll never
+    store a list or `None` as a value in the dict.
+    '''
+    prev = d.get(k)
+    if prev is None:
+        d[k] = v
+    elif isinstance(prev, list):
+        prev.append(v)
+    else:
+        d[k] = [prev, v]
 
 def _extract_text_and_child_element_list(minidom_node):
     '''Returns a pair of the "child" content of minidom_node:
@@ -119,12 +138,7 @@ def _extract_text_and_child_element_list(minidom_node):
     '''
     tl = []
     ntl = []
-    #try:
-    #    _LOG.debug('Node dump: {d}'.format(d=_debug_dump_dom(minidom_node)))
-    #except:
-    #    pass
     for c in minidom_node.childNodes:
-        
         if c.nodeType == xml.dom.minidom.Node.TEXT_NODE:
             tl.append(c)
         else:
@@ -136,58 +150,24 @@ def _extract_text_and_child_element_list(minidom_node):
         text_content = ''
     return text_content, ntl
 
-_SYNTAX_CONVENTION_FOR_META = 3
-#ot:... in parent as key -> primitive
-_USING_FEB_1_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 0
-_USING_ALT_1_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 1
-_USING_ALT_2_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 2
-_USING_ALT_3_CONVENTION = _SYNTAX_CONVENTION_FOR_META == 3
-
-_TRANSFORM_OT_ATT_ONLY = _USING_FEB_1_CONVENTION or _USING_ALT_3_CONVENTION
-_TRANSFORM_ALL_ATT = False
-_TRANSFORM_NO_ATTS = not _TRANSFORM_OT_ATT_ONLY
-
-_FORCE_FULL_OBJECT_FOR_META = _USING_ALT_2_CONVENTION
-
-_ALL_UNTRANSFORMED_META_CHILDREN_AS_ARRAYS = not (_USING_ALT_1_CONVENTION or _USING_ALT_2_CONVENTION)
-if not _ALL_UNTRANSFORMED_META_CHILDREN_AS_ARRAYS:
-    _TREAT_ATT_AS_ARRAY_FN = lambda x : (x in _PLURAL_META_TO_ATT_KEYS_SET) or (not x.startswith('@ot:'))
-
-if _TRANSFORM_OT_ATT_ONLY:
-    _ATT_DO_TRANSFORM_FILTER_FN = lambda x : x.startswith('ot:')
-elif _TRANSFORM_ALL_ATT:
-    _ATT_DO_TRANSFORM_FILTER_FN = lambda x : True
-elif _TRANSFORM_NO_ATTS:
-    _ATT_DO_TRANSFORM_FILTER_FN = lambda x : False
-
-_PROMOTE_ALL_NON_NONE = not _USING_ALT_3_CONVENTION
 
 class ATT_TRANSFORM_CODE:
     PREVENT_TRANSFORMATION, IN_FULL_OBJECT, HANDLED, CULL = range(4)
-
 _SUBELEMENTS_OF_LITERAL_META_AS_ATT = frozenset(['content', 'datatype', 'property', 'xsi:type', 'id'])
 _HANDLED_SUBELEMENTS_OF_LITERAL_META_AS_ATT = frozenset(['content', 'datatype', 'property', 'xsi:type'])
-def _cull_non_id_subelement_handler(name):
+def _literal_meta_att_decision_fn(name):
     if name in _HANDLED_SUBELEMENTS_OF_LITERAL_META_AS_ATT:
         return ATT_TRANSFORM_CODE.HANDLED, None
-    if name == 'id':
-        return ATT_TRANSFORM_CODE.IN_FULL_OBJECT, '@' + name
-    return ATT_TRANSFORM_CODE.PREVENT_TRANSFORMATION, name
+    return ATT_TRANSFORM_CODE.IN_FULL_OBJECT, '@' + name
+
 
 _SUBELEMENTS_OF_RESOURCE_META_AS_ATT = frozenset(['href', 'xsi:type', 'rel', 'id'])
 _HANDLED_SUBELEMENTS_OF_RESOURCE_META_AS_ATT = frozenset(['xsi:type', 'rel'])
 _OBJ_PROP_SUBELEMENTS_OF_RESOURCE_META_AS_ATT = frozenset(['href', 'id'])
-def _cull_non_id_or_href(name):
+def _resource_meta_att_decision_fn(name):
     if name in _HANDLED_SUBELEMENTS_OF_RESOURCE_META_AS_ATT:
         return ATT_TRANSFORM_CODE.HANDLED, None
-    if name in _OBJ_PROP_SUBELEMENTS_OF_RESOURCE_META_AS_ATT:
-        return ATT_TRANSFORM_CODE.IN_FULL_OBJECT, '@' + name
-    return ATT_TRANSFORM_CODE.PREVENT_TRANSFORMATION, name
-
-_SUBELEMENTS_OF_LITERAL_META_DECISION_FN = _cull_non_id_subelement_handler
-_SUBELEMENTS_OF_RESOURCE_META_DECISION_FN = _cull_non_id_or_href
-
-_PROPERTY_PREFIXES_FOR_META_AS_ATT = frozenset(['ot:'])
+    return ATT_TRANSFORM_CODE.IN_FULL_OBJECT, '@' + name
 
 class NexmlTypeError(Exception):
     def __init__(self, m):
@@ -220,10 +200,7 @@ def _coerce_literal_val_to_primitive(datatype, str_val):
         _LOG.debug('unknown xsi:type {t}'.format(t=datatype))
         return None # We'll fall through to here when we encounter types we do not recognize
 
-def _literal_meta_to_key_value(minidom_meta_element, 
-                               att_do_transform_filter_fn,
-                               subel_decider_fn,
-                               resource_meta_subel_decider_fn):
+def _literal_transform_meta_key_value(minidom_meta_element):
     att_key = None
     dt = minidom_meta_element.getAttribute('datatype') or 'xsd:string'
     att_str_val = minidom_meta_element.getAttribute('content')
@@ -233,36 +210,30 @@ def _literal_meta_to_key_value(minidom_meta_element,
         _LOG.debug('"property" missing from literal meta')
         return None
     el_id = None
-    if not att_do_transform_filter_fn(att_key):
-        _LOG.debug('Attributes of property "{p}" are not transformed'.format(p=att_key))
-        return None
     att_container = minidom_meta_element.attributes
     for i in xrange(att_container.length):
         attr = att_container.item(i)
-        handling_code, new_name = subel_decider_fn(attr.name)
-        if handling_code == ATT_TRANSFORM_CODE.PREVENT_TRANSFORMATION:
-            _LOG.debug('A "{n}" property in a literal meta prevents'.format(n=new_name))
-            return None
+        handling_code, new_name = _literal_meta_att_decision_fn(attr.name)
         if handling_code == ATT_TRANSFORM_CODE.IN_FULL_OBJECT:
             full_obj[new_name] = attr.value
+        else:
+            assert (handling_code == ATT_TRANSFORM_CODE.HANDLED)
+            
     if not att_str_val:
         att_str_val, ntl = _extract_text_and_child_element_list(minidom_meta_element)
         if len(ntl) > 0: # #TODO: the case of len(ntl) == 1, is a nested meta, and should be handled.
             _LOG.debug('Nested meta elements are not legal for LiteralMeta (offending property={p}'.format(p=att_key))
             return None
-    att_key = '@' + att_key
+    att_key = '^' + att_key
     trans_val = _coerce_literal_val_to_primitive(dt, att_str_val)
     if trans_val is None:
         return None
-    if full_obj or _FORCE_FULL_OBJECT_FOR_META:
+    if full_obj:
         full_obj['$'] = trans_val
         return att_key, full_obj
     return att_key, trans_val
 
-def _resource_meta_to_key_value(minidom_meta_element, 
-                                att_do_transform_filter_fn,
-                                literal_meta_subel_decider_fn,
-                                subel_decider_fn):
+def _resource_transform_meta_key_value(minidom_meta_element):
     rel = minidom_meta_element.getAttribute('rel')
     if rel is None:
         _LOG.debug('"rel" missing from ResourceMeta')
@@ -272,16 +243,12 @@ def _resource_meta_to_key_value(minidom_meta_element,
     att_container = minidom_meta_element.attributes
     for i in xrange(att_container.length):
         attr = att_container.item(i)
-        handling_code, new_name = subel_decider_fn(attr.name)
-        if handling_code == ATT_TRANSFORM_CODE.PREVENT_TRANSFORMATION:
-            _LOG.debug('A "{n}" property in a literal meta prevents'.format(n=new_name))
-            return None
+        handling_code, new_name = _resource_meta_att_decision_fn(attr.name)
         if handling_code == ATT_TRANSFORM_CODE.IN_FULL_OBJECT:
             full_obj[new_name] = attr.value
-    if not att_do_transform_filter_fn(rel):
-        _LOG.debug('Attributes of property "{p}" are not transformed'.format(p=rel))
-        return None
-    rel = '@' + rel
+        else:
+            assert (handling_code == ATT_TRANSFORM_CODE.HANDLED)
+    rel = '^' + rel
     att_str_val, ntl = _extract_text_and_child_element_list(minidom_meta_element)
     if att_str_val:
         _LOG.debug('text content of ResourceMeta of rel="{r}"'.format(r=rel))
@@ -293,10 +260,7 @@ def _resource_meta_to_key_value(minidom_meta_element,
         return None
     return rel, full_obj
 
-def _meta_to_key_value(minidom_meta_element, 
-                       att_do_transform_filter_fn,
-                       literal_meta_subel_decider_fn,
-                       resource_meta_subel_decider_fn):
+def _transform_meta_key_value(minidom_meta_element):
     '''Checks if the minidom_meta_element can be represented as a
         key/value pair in a object.
 
@@ -307,21 +271,15 @@ def _meta_to_key_value(minidom_meta_element,
     '''
     xt = minidom_meta_element.getAttribute('xsi:type')
     if xt == 'nex:LiteralMeta':
-        return _literal_meta_to_key_value(minidom_meta_element,
-                                          att_do_transform_filter_fn,
-                                          literal_meta_subel_decider_fn,
-                                          resource_meta_subel_decider_fn)
+        return _literal_transform_meta_key_value(minidom_meta_element)
     elif xt == 'nex:ResourceMeta':
-        return _resource_meta_to_key_value(minidom_meta_element,
-                                           att_do_transform_filter_fn,
-                                           literal_meta_subel_decider_fn,
-                                           resource_meta_subel_decider_fn)
+        return _resource_transform_meta_key_value(minidom_meta_element)
     else:
         _LOG.debug('xsi:type attribute not LiteralMeta or ResourceMeta')
         return None
 
 
-def _gen_hbf_el(x, att_do_transform_filter_fn):
+def _gen_hbf_el(x):
     '''
     Builds a dictionary from the ElementTree element x
     The function
@@ -364,63 +322,20 @@ def _gen_hbf_el(x, att_do_transform_filter_fn):
     #   xml elements
     cd = {}
     ko = []
-    meta_as_att_list = []
-    plural_meta_as_att_dict = {}
-    in_place_meta_el = {}
     ks = set()
     for child in ntl:
         k = child.nodeName
         if k == 'meta':
-            mat_obj = _meta_to_key_value(child,
-                                         att_do_transform_filter_fn,
-                                         _SUBELEMENTS_OF_LITERAL_META_DECISION_FN,
-                                         _SUBELEMENTS_OF_RESOURCE_META_DECISION_FN)
-            promotion_possible = _PROMOTE_ALL_NON_NONE or (mat_obj and ((not isinstance(mat_obj[1], dict)) or ('$' not in mat_obj[1])))
-            if (mat_obj is not None) and promotion_possible:
-                matk, matv = mat_obj
-                if matk in _PLURAL_META_TO_ATT_KEYS_SET:
-                    plural_meta_as_att_dict.setdefault(matk, []).append(matv)
-                else:
-                    meta_as_att_list.append((matk, matv))
-            else:
-                mat_obj = _meta_to_key_value(child,
-                                             lambda x: True, # generate the same form of element, for any property type. These will be in a meta object...
-                                             _SUBELEMENTS_OF_LITERAL_META_DECISION_FN,
-                                             _SUBELEMENTS_OF_RESOURCE_META_DECISION_FN)
-                assert (mat_obj is not None)
-                matk, matv = mat_obj
-                if _ALL_UNTRANSFORMED_META_CHILDREN_AS_ARRAYS or _TREAT_ATT_AS_ARRAY_FN(matk):
-                    in_place_meta_el.setdefault(matk, []).append(matv)
-                else:
-                    print matk
-                    assert(matk not in in_place_meta_el)
-                    in_place_meta_el[matk] = matv
-
-            continue
-
-        if k not in ks:
-            ko.append(k)
-            ks.add(k)
-        p = cd.get(k)
-        if p is None:
-            cd[k] = child
-        elif isinstance(p, list):
-            p.append(child)
+            matk, matv = _transform_meta_key_value(child)
+            _add_value_to_dict_bf(obj, matk, matv)
         else:
-            cd[k] = [p, child]
-    # add the attribute-like syntax to the obj.
-    for matk, matv in meta_as_att_list:
-        if matk in obj:
-            print matk
-            assert(matk not in obj)
-        obj[matk] = matv
-    for matk, matv in plural_meta_as_att_dict.items():
-        assert(matk not in obj)
-        obj[matk] = matv
-    if in_place_meta_el:
-        obj['meta'] = in_place_meta_el
+            if k not in ks:
+                ko.append(k)
+                ks.add(k)
+            _add_value_to_dict_bf(cd, k, child)
+
     # Converts the child XML elements to dicts by recursion and
-    #   adds these to the dict.att_do_transform_filter_fn
+    #   adds these to the dict.
     for k in ko:
         v = cd[k]
         if not isinstance(v, list):
@@ -428,7 +343,7 @@ def _gen_hbf_el(x, att_do_transform_filter_fn):
         dcl = []
         ct = None
         for xc in v:
-            ct, dc = _gen_hbf_el(xc, att_do_transform_filter_fn)
+            ct, dc = _gen_hbf_el(xc)
             dcl.append(dc)
         # this assertion will trip is the hacky stripping of namespaces
         #   results in a name clash among the tags of the children
@@ -450,7 +365,7 @@ def to_honeybadgerfish_dict(src, encoding=u'utf8'):
         src = codecs.open(src, 'rU', encoding=encoding)
     doc = xml.dom.minidom.parse(src)
     root = doc.documentElement
-    key, val = _gen_hbf_el(root, _ATT_DO_TRANSFORM_FILTER_FN)
+    key, val = _gen_hbf_el(root)
     return {key: val}
 
 
@@ -728,20 +643,6 @@ def embed_refers_to_in_message(m):
         m['refersTo'] = convert_dict_to_honeybadgerfish_att_dict(address.path)
     except:
         pass
-
-def _add_value_to_dict(d, k, v):
-    '''Adds the `k`->`v` mapping to `d`, but if a previous element exists it changes
-    the value of for the key to list. 
-    This is a simple multi-dict that is only suitable when you know that you'll never
-    store a list or `None` as a value in the dict.
-    '''
-    prev = d.get(k)
-    if prev is None:
-        d[k] = v
-    elif isinstance(prev, list):
-        prev.append(v)
-    else:
-        d[k] = [prev, v]
 
 def add_or_replace_annotation(obj, annotation_event, agent, message_list, rich_logger):
     '''Takes a nexson object `obj` and an annotation_event, agent, message_list as 
@@ -1719,7 +1620,7 @@ class NexsonDictWrapper(object):
                 try:
                     for e in annotation_events['annotation']:
                         try:
-                            _add_value_to_dict(id2obj, e['@id'], e)
+                            _add_value_to_dict_bf(id2obj, e['@id'], e)
                         except:
                             pass
                 except:
@@ -1729,7 +1630,7 @@ class NexsonDictWrapper(object):
                 try:
                     for e in agents['agent']:
                         try:
-                            _add_value_to_dict(id2obj, e['@id'], e)
+                            _add_value_to_dict_bf(id2obj, e['@id'], e)
                         except:
                             pass
                 except:
@@ -1739,13 +1640,13 @@ class NexsonDictWrapper(object):
                 try:
                     for e in messages['message']:
                         try:
-                            _add_value_to_dict(id2obj, e['@id'], e)
+                            _add_value_to_dict_bf(id2obj, e['@id'], e)
                         except:
                             pass
                         if rich_logger.annotation_event_ids_to_store \
                           and e.get('@wasGeneratedById') in rich_logger.annotation_event_ids_to_store:
                             try:
-                                _add_value_to_dict(rich_logger.flagged_messages, e['@id'], (e, self))
+                                _add_value_to_dict_bf(rich_logger.flagged_messages, e['@id'], (e, self))
                             except:
                                 pass
                 except:
@@ -1805,7 +1706,7 @@ class NexsonDictWrapper(object):
         '''
         check_key_presence(d, self, rich_logger)
         if rich_logger and (rich_logger.id2obj is not None) and '@id' in self.PERMISSIBLE_KEYS and '@id' in d:
-            _add_value_to_dict(rich_logger.id2obj, d['@id'], d)
+            _add_value_to_dict_bf(rich_logger.id2obj, d['@id'], d)
         self._consume_meta(d, rich_logger, self.EXPECTED_META_KEYS)
 
 class MetaValueList(list):
@@ -2509,7 +2410,7 @@ class NexSON(NexsonDictWrapper):
         self._nexml = o['nexml']
         NexsonDictWrapper.__init__(self, self._nexml, rich_logger, None)
         if rich_logger and (rich_logger.id2obj is not None) and '@id' in self._nexml:
-            _add_value_to_dict(rich_logger.id2obj, self._nexml['@id'], self)
+            _add_value_to_dict_bf(rich_logger.id2obj, self._nexml['@id'], self)
         
         check_key_presence(self._nexml, self, rich_logger)
         self._consume_meta(self._nexml, rich_logger, self.EXPECTED_META_KEYS)
