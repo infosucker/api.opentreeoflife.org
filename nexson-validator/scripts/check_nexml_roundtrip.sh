@@ -72,8 +72,8 @@ saxon-xslt .pp1.xml "${dir}/sortattr.xslt" > .s1.xml || exit
 saxon-xslt .pp2.xml "${dir}/sortattr.xslt" > .s2.xml || exit
 
 # clean by getting rid of hard-to-standardize xml decl and generator field in top element
-sed -e '/<\?xml version/d' .s1.xml | sed -e 's/<nex\(.*\)generator="[^"]*"/<nex\1/' > .cpp1.xml
-sed -e '/<\?xml version/d' .s2.xml | sed -e 's/<nex\(.*\)generator="[^"]*"/<nex\1/' > .cpp2.xml
+sed -e '/<\?xml version/d' .s1.xml | sed -e 's/<nex\(.*\)generator="[^"]*"/<nex\1/' | sed -e 's/ about="[^"]*"//' > .cpp1.xml
+sed -e '/<\?xml version/d' .s2.xml | sed -e 's/<nex\(.*\)generator="[^"]*"/<nex\1/' | sed -e 's/ about="[^"]*"//' > .cpp2.xml
 
 
 if ! diff .cpp1.xml .cpp2.xml 
