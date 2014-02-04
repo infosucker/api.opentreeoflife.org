@@ -12,7 +12,6 @@ import re
 
 VERSION = '0.0.3a'
 
-
 ###############################################################################
 # Code for honeybadgerfish conversion of TreeBase XML to NexSON
 ###############################################################################
@@ -21,8 +20,8 @@ VERSION = '0.0.3a'
 # env-sentive logging for easier debugging
 ##########################################
 import os
-_LOGGING_LEVEL_ENVAR="NEXSON_LOGGING_LEVEL"
-_LOGGING_FORMAT_ENVAR="NEXSON_LOGGING_FORMAT"
+_LOGGING_LEVEL_ENVAR = "NEXSON_LOGGING_LEVEL"
+_LOGGING_FORMAT_ENVAR = "NEXSON_LOGGING_FORMAT"
 
 def get_logging_level():
     if _LOGGING_LEVEL_ENVAR in os.environ:
@@ -65,7 +64,7 @@ def get_logger(name="nexson"):
         level = get_logging_level()
         rich_formatter = logging.Formatter("[%(asctime)s] %(filename)s (%(lineno)d): %(levelname) 8s: %(message)s")
         simple_formatter = logging.Formatter("%(levelname) 8s: %(message)s")
-        raw_formatter = logging.Formatter("%(message)s")
+        #raw_formatter = logging.Formatter("%(message)s")
         default_formatter = None
         logging_formatter = default_formatter
         if _LOGGING_FORMAT_ENVAR in os.environ:
@@ -80,7 +79,7 @@ def get_logger(name="nexson"):
         else:
             logging_formatter = default_formatter
         if logging_formatter is not None:
-            logging_formatter.datefmt='%H:%M:%S'
+            logging_formatter.datefmt = '%H:%M:%S'
         logger.setLevel(level)
         ch = logging.StreamHandler()
         ch.setLevel(level)
@@ -171,31 +170,31 @@ def _resource_meta_att_decision_fn(name):
 
 class NexmlTypeError(Exception):
     def __init__(self, m):
-        self.m = m
+        self.msg = m
     def __str__(self):
-        return self.m
+        return self.msg
 
 def _coerce_literal_val_to_primitive(datatype, str_val):
-    _TYPE_ERROR_MSG_FORMAT = 'Expected meta property {p} to have type {t}, but found "{v}"'
+    _TYPE_ERROR_MSG_FORMAT = 'Expected meta property to have type {t}, but found "{v}"'
     if datatype == 'xsd:string':
         return str_val
     if datatype in frozenset(['xsd:int', 'xsd:integer', 'xsd:long']):
         try:
             return int(str_val)
         except:
-            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=datatype, v=str_val))
+            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(t=datatype, v=str_val))
     elif datatype == frozenset(['xsd:float', 'xsd:double']):
         try:
             return float(str_val)
         except:
-            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=datatype, v=str_val))
+            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(t=datatype, v=str_val))
     elif datatype == 'xsd:boolean':
         if str_val.lower() in frozenset(['1', 'true']):
             return True
         elif str_val.lower() in frozenset(['0', 'false']):
             return False
         else:
-            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(p=att_key, t=datatype, v=str_val))
+            raise NexmlTypeError(_TYPE_ERROR_MSG_FORMAT.format(t=datatype, v=str_val))
     else:
         _LOG.debug('unknown xsi:type {t}'.format(t=datatype))
         return None # We'll fall through to here when we encounter types we do not recognize
@@ -209,7 +208,6 @@ def _literal_transform_meta_key_value(minidom_meta_element):
     if att_key is None:
         _LOG.debug('"property" missing from literal meta')
         return None
-    el_id = None
     att_container = minidom_meta_element.attributes
     for i in xrange(att_container.length):
         attr = att_container.item(i)
@@ -239,7 +237,6 @@ def _resource_transform_meta_key_value(minidom_meta_element):
         _LOG.debug('"rel" missing from ResourceMeta')
         return None
     full_obj = {}
-    el_id = None
     att_container = minidom_meta_element.attributes
     for i in xrange(att_container.length):
         attr = att_container.item(i)
@@ -423,23 +420,24 @@ def _create_sub_el(doc, parent, tag, attrib, data=None):
 
 def _add_nested_resource_meta(doc, parent, name, value, att_dict):
     # assuming the @href holds "value" so we don't actually use the value arg currently.
+    '''tatts = {'xsi:type':  'nex:ResourceMeta',
+             'rel': name}
+    for k, v in att_dict.items():
+        assert(k.startswith('@'))
+        real_att = k[1:]
+        tatts[real_att] = v
+    m = _create_sub_el(doc, parent, 'meta', tatts)'''
     raise NotImplementedError('Nested Meta')
+    
+def _add_href_resource_meta(doc, parent, name, att_dict):
     tatts = {'xsi:type':  'nex:ResourceMeta',
              'rel': name}
     for k, v in att_dict.items():
         assert(k.startswith('@'))
         real_att = k[1:]
         tatts[real_att] = v
-    m = _create_sub_el(doc, parent, 'meta', tatts)
-def _add_href_resource_meta(doc, parent, name, value, att_dict):
-    # assuming the @href holds "value" so we don't actually use the value arg currently.
-    tatts = {'xsi:type':  'nex:ResourceMeta',
-             'rel': name}
-    for k, v in att_dict.items():
-        assert(k.startswith('@'))
-        real_att = k[1:]
-        tatts[real_att] = v
-    m = _create_sub_el(doc, parent, 'meta', tatts)
+    return _create_sub_el(doc, parent, 'meta', tatts)
+
 def _add_literal_meta(doc, parent, name, value, att_dict):
     # assuming the @href holds "value" so we don't actually use the value arg currently.
     tatts = {'xsi:type':  'nex:LiteralMeta',
@@ -452,7 +450,7 @@ def _add_literal_meta(doc, parent, name, value, att_dict):
         assert(k.startswith('@'))
         real_att = k[1:]
         tatts[real_att] = v
-    m = _create_sub_el(doc, parent, 'meta', tatts, value)
+    return _create_sub_el(doc, parent, 'meta', tatts, value)
 
 
 def _add_meta_value_to_xml_doc(doc, parent, key, value):
@@ -465,7 +463,7 @@ def _add_meta_value_to_xml_doc(doc, parent, key, value):
             else:
                 _add_literal_meta(doc, parent, name=key, value=content, att_dict=value)
         else:
-            _add_href_resource_meta(doc, parent, name=key, value=href, att_dict=value)
+            _add_href_resource_meta(doc, parent, name=key, att_dict=value)
     else:
         _add_literal_meta(doc, parent, name=key, value=value, att_dict={})
 
@@ -557,7 +555,7 @@ def get_ot_study_info_from_nexml(src, encoding=u'utf8'):
         removes nexml/characters @TODO: should replace it with a URI for 
             where the removed character data can be found.
     '''
-    o = to_honeybadgerfish_dict(src)
+    o = to_honeybadgerfish_dict(src, encoding)
     try:
         if ('nexml' in o) and ('characters' in o['nexml']):
             del o['nexml']['characters']
@@ -632,15 +630,15 @@ def write_obj_as_nexml(obj_dict, file_obj, addindent='', newl=''):
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "xmlns:ot": "http://purl.org/opentree/nexson",
     }
-    extra = {
-        "xmlns:dc": "http://purl.org/dc/elements/1.1/",
-        "xmlns:dcterms": "http://purl.org/dc/terms/",
-        "xmlns:prism": "http://prismstandard.org/namespaces/1.2/basic/",
-        "xmlns:rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-        "xmlns:rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-        "xmlns:skos": "http://www.w3.org/2004/02/skos/core#",
-        "xmlns:tb": "http://purl.org/phylo/treebase/2.0/terms#",
-    }
+    # extra = {
+    #     "xmlns:dc": "http://purl.org/dc/elements/1.1/",
+    #     "xmlns:dcterms": "http://purl.org/dc/terms/",
+    #     "xmlns:prism": "http://prismstandard.org/namespaces/1.2/basic/",
+    #     "xmlns:rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    #     "xmlns:rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    #     "xmlns:skos": "http://www.w3.org/2004/02/skos/core#",
+    #     "xmlns:tb": "http://purl.org/phylo/treebase/2.0/terms#",
+    # }
     doc = xml.dom.minidom.Document()
     _nex_obj_2_nexml_doc(doc, obj_dict, root_atts=root_atts)
     doc.writexml(file_obj, addindent=addindent, newl=newl)

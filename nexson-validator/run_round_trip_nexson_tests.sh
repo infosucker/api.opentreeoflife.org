@@ -1,24 +1,14 @@
 #!/bin/sh
 total=0
 passed=0
-if ! test -z "${NEXML_SCHEMA}"
-then
-    if test -f "${NEXML_SCHEMA}"
+for f in $(ls tests/nexson/*.nexson)
+do
+    total=$(expr $total + 1)
+    if sh scripts/check_nexson_roundtrip.sh "$f" "${NEXML_SCHEMA}" -o
     then
-        for f in $(ls tests/nexson/*.nexson)
-        do
-            total=$(expr $total + 1)
-            if sh scripts/check_nexson_roundtrip.sh "$f" "${NEXML_SCHEMA}" -o
-            then
-                passed=$(expr $passed + 1)
-            fi
-        done
-    else 
-        echo "NexSON roundtrip tests skipped because ${NEXML_SCHEMA} does not exist"
+        passed=$(expr $passed + 1)
     fi
-else
-    echo "NexSON roundtrip tests skipped because the NEXML_SCHEMA environmental variable is not set"
-fi
+done
 
 if test $passed -eq $total
 then

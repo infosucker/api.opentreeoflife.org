@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 from nexson_validator import get_ot_study_info_from_nexml, write_obj_as_nexml
-
-
 if __name__ == '__main__':
     import sys, codecs, json, os
     _HELP_MESSAGE = '''nexml_nexson converter. Expects an input filepath and optional ouputfilepath:
@@ -35,17 +33,16 @@ Environmental variables NEXSON_INDENTATION_SETTING and NEXML_INDENTATION_SETTING
         sys.exit('nexson_nexml: Could not open file "{fn}"\n'.format(fn=inpfn))
     try:
         while True:
-            c = inp.read(1).strip()
-            if c == '<':
+            first_graph_char = inp.read(1).strip()
+            if first_graph_char == '<':
                 mode = 'xj'
                 break
-            elif c in '{[':
+            elif first_graph_char in '{[':
                 mode = 'jx'
                 break
-            elif c:
+            elif first_graph_char:
                 raise ValueError('Expecting input to start with <, {, or [')
     except:
-        raise
         sys.exit('nexson_nexml: First character of "{fn}" was not <, {, or [\nInput does not appear to be NeXML or NexSON\n'.format(fn=inpfn))
     inp.seek(0)
     
@@ -63,15 +60,14 @@ Environmental variables NEXSON_INDENTATION_SETTING and NEXML_INDENTATION_SETTING
         out = codecs.getwriter('utf-8')(sys.stdout)
 
     if mode == 'xj':
-        o = get_ot_study_info_from_nexml(inp)
-        json.dump(o, out, indent=indentation, sort_keys=True)
+        blob = get_ot_study_info_from_nexml(inp)
+        json.dump(blob, out, indent=indentation, sort_keys=True)
         out.write('\n')
     else:
-        o = json.load(inp)
+        blob = json.load(inp)
         if indentation > 0:
             indent = ' '*indentation
         else:
             indent = ''
         newline = '\n'
-        write_obj_as_nexml(o, out, addindent=indent, newl=newline)
-
+        write_obj_as_nexml(blob, out, addindent=indent, newl=newline)
