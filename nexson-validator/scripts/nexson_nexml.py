@@ -68,5 +68,10 @@ Environmental variables NEXSON_INDENTATION_SETTING and NEXML_INDENTATION_SETTING
         out.write('\n')
     else:
         o = json.load(inp)
-        write_obj_as_nexml(o, out)
+        if indentation > 0:
+            indent = ' '*indentation
+        else:
+            indent = ''
+        newline = '\n'
+        write_obj_as_nexml(o, out, addindent=indent, newl=newline)
 

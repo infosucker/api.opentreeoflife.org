@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import xml.etree.ElementTree as ET
 from cStringIO import StringIO
 import xml.dom.minidom
 import datetime
@@ -489,7 +488,17 @@ _XSD_TYPE_COERCION = {
     'xsd:string': unicode,
 }
 
-def _add_child_list_to_ET_subtree(parent, child_list, key, key_order):
+def _create_sub_el(doc, parent, tag, attrib, data):
+    el = doc.createElement(tag)
+    for att_key, att_value in attrib.items():
+        el.setAttribute(att_key, att_value)
+    if parent:
+        parent.appendChild(el)
+    if data:
+        el.appendChild(doc.createTextNode(unicode(data)))
+    return el
+
+def _add_child_list_to_ET_subtree(doc, parent, child_list, key, key_order):
     if not isinstance(child_list, list):
         child_list = [child_list]
     for child in child_list:
@@ -500,14 +509,12 @@ def _add_child_list_to_ET_subtree(parent, child_list, key, key_order):
                 if dsv is None:
                     dsv = _python_instance_to_nexml_meta_datatype(cd)
                 ca['datatype'] = dsv
-            cel = ET.SubElement(parent, u'meta', attrib=ca)
+            cel = _create_sub_el(doc, parent, u'meta', ca, cd)
         else:
-            cel = ET.SubElement(parent, key, attrib=ca)
-        if cd is not None:
-            cel.text = unicode(cd)
-        _add_ET_subtree(cel, cc, key_order)
+            cel = _create_sub_el(doc, parent, key, ca, cd)
+        _add_ET_subtree(doc, cel, cc, key_order)
 
-def _add_ET_subtree(parent, children_dict, key_order=None):
+def _add_ET_subtree(doc, parent, children_dict, key_order=None):
     written = set()
     if key_order:
         for t in key_order:
@@ -516,13 +523,13 @@ def _add_ET_subtree(parent, children_dict, key_order=None):
             if k in children_dict:
                 child_list = children_dict[k]
                 written.add(k)
-                _add_child_list_to_ET_subtree(parent, child_list, k, next_order_el)
+                _add_child_list_to_ET_subtree(doc, parent, child_list, k, next_order_el)
     ksl = children_dict.keys()
     ksl.sort()
     for k in ksl:
         child_list = children_dict[k]
         if k not in written:
-            _add_child_list_to_ET_subtree(parent, child_list, k, None)
+            _add_child_list_to_ET_subtree(doc, parent, child_list, k, None)
 
 
 def _break_keys_by_hbf_type(o):
@@ -549,30 +556,6 @@ def _break_keys_by_hbf_type(o):
         else:
             ck[k] = v
     return ak, tk, ck
-
-
-def bf2ET(obj_dict, key_order=None):
-    '''Converts a dict-like object that obeys the honeybadgerfish conventions
-    to an ElementTree.Element that represents the data in a subtree of
-    XML tree.
-    '''
-    base_keys = obj_dict.keys()
-    assert(len(base_keys) == 1)
-    root_name = base_keys[0]
-    root_obj = obj_dict[root_name]
-    atts, data, children = _break_keys_by_hbf_type(root_obj)
-    #attrib_dict = _xml_attrib_for_hbf_obj(root_obj)
-    r = ET.Element(root_name, attrib=atts)
-    if data is not None:
-        r.text = unicode(data)
-    _add_ET_subtree(r, children, key_order)
-    return r
-
-def write_obj_as_xml(obj_dict, file_obj):
-    r = bf2ET(obj_dict)
-    ET.ElementTree(r).write(file_obj,
-                            encoding='utf-8')
-    file_obj.write(u'\n')
 
 def get_ot_study_info_from_nexml(src, encoding=u'utf8'):
     '''Converts an XML doc to JSON using the honeybadgerfish convention (see to_honeybadgerfish_dict)
@@ -601,7 +584,7 @@ def get_ot_study_info_from_treebase_nexml(src, encoding=u'utf8'):
     return o
 
 
-def nexobj2ET(obj_dict, root_atts=None):
+def _nex_obj_2_nexml_doc(doc, obj_dict, root_atts=None):
     base_keys = obj_dict.keys()
     assert(len(base_keys) == 1)
     root_name = base_keys[0]
@@ -613,10 +596,7 @@ def nexobj2ET(obj_dict, root_atts=None):
     if root_atts:
         for k, v in root_atts.items():
             atts[k] = v
-    #attrib_dict = _xml_attrib_for_hbf_obj(root_obj)
-    r = ET.Element(root_name, attrib=atts)
-    if data is not None:
-        r.text = unicode(data)
+    r = _create_sub_el(doc, doc, root_name, atts, data)
     nexml_key_order = (('meta', None),
                        ('otus', (('meta', None),
                                  ('otu', None)
@@ -646,10 +626,10 @@ def nexobj2ET(obj_dict, root_atts=None):
                                  )
                        )
                       )
-    _add_ET_subtree(r, children, nexml_key_order)
-    return r
+    _add_ET_subtree(doc, r, children, nexml_key_order)
 
-def write_obj_as_nexml(obj_dict, file_obj):
+
+def write_obj_as_nexml(obj_dict, file_obj, addindent='', newl=''):
     root_atts = {
         "xmlns:nex": "http://www.nexml.org/2009",
         "xmlns": "http://www.nexml.org/2009",
@@ -666,10 +646,9 @@ def write_obj_as_nexml(obj_dict, file_obj):
         "xmlns:skos": "http://www.w3.org/2004/02/skos/core#",
         "xmlns:tb": "http://purl.org/phylo/treebase/2.0/terms#",
     }
-    r = nexobj2ET(obj_dict, root_atts=root_atts)
-    ET.ElementTree(r).write(file_obj,
-                            encoding='utf-8')
-    file_obj.write(u'\n')
+    doc = xml.dom.minidom.Document()
+    _nex_obj_2_nexml_doc(doc, obj_dict, root_atts=root_atts)
+    doc.writexml(file_obj, addindent=addindent, newl=newl)
 
 
 ################################################################################
