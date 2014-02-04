@@ -368,7 +368,6 @@ def to_honeybadgerfish_dict(src, encoding=u'utf8'):
     key, val = _gen_hbf_el(root)
     return {key: val}
 
-
 def _python_instance_to_nexml_meta_datatype(v):
     if isinstance(v, int) or isinstance(v, long):
         return 'xsd:int'
@@ -403,33 +402,96 @@ _XSD_TYPE_COERCION = {
     'xsd:string': unicode,
 }
 
-def _create_sub_el(doc, parent, tag, attrib, data):
+
+def _create_sub_el(doc, parent, tag, attrib, data=None):
     el = doc.createElement(tag)
-    for att_key, att_value in attrib.items():
-        el.setAttribute(att_key, att_value)
+    if attrib:
+        for att_key, att_value in attrib.items():
+            el.setAttribute(att_key, att_value)
     if parent:
         parent.appendChild(el)
     if data:
         el.appendChild(doc.createTextNode(unicode(data)))
     return el
 
-def _add_child_list_to_ET_subtree(doc, parent, child_list, key, key_order):
-    if not isinstance(child_list, list):
-        child_list = [child_list]
-    for child in child_list:
-        ca, cd, cc = _break_keys_by_hbf_type(child)
-        if key == u'meta':
+def _add_nested_resource_meta(doc, parent, name, value, att_dict):
+    # assuming the @href holds "value" so we don't actually use the value arg currently.
+    raise NotImplementedError('Nested Meta')
+    tatts = {'xsi:type':  'nex:ResourceMeta',
+             'rel': name}
+    for k, v in att_dict.items():
+        assert(k.startswith('@'))
+        real_att = k[1:]
+        tatts[real_att] = v
+    m = _create_sub_el(doc, parent, 'meta', tatts)
+def _add_href_resource_meta(doc, parent, name, value, att_dict):
+    # assuming the @href holds "value" so we don't actually use the value arg currently.
+    tatts = {'xsi:type':  'nex:ResourceMeta',
+             'rel': name}
+    for k, v in att_dict.items():
+        assert(k.startswith('@'))
+        real_att = k[1:]
+        tatts[real_att] = v
+    m = _create_sub_el(doc, parent, 'meta', tatts)
+def _add_literal_meta(doc, parent, name, value, att_dict):
+    # assuming the @href holds "value" so we don't actually use the value arg currently.
+    tatts = {'xsi:type':  'nex:LiteralMeta',
+             'datatype': _python_instance_to_nexml_meta_datatype(value),
+             'property': name
+             }
+    for k, v in att_dict.items():
+        if k in ['@content', '$']:
+            continue
+        assert(k.startswith('@'))
+        real_att = k[1:]
+        tatts[real_att] = v
+    m = _create_sub_el(doc, parent, 'meta', tatts, value)
+
+
+def _add_meta_value_to_xml_doc(doc, parent, key, value):
+    if isinstance(value, dict):
+        href = value.get('@href')
+        if href is None:
+            content = value['$']
+            if isinstance(content, dict):
+                _add_nested_resource_meta(doc, parent, name=key, value=content, att_dict=value)
+            else:
+                _add_literal_meta(doc, parent, name=key, value=content, att_dict=value)
+        else:
+            _add_href_resource_meta(doc, parent, name=key, value=href, att_dict=value)
+    else:
+        _add_literal_meta(doc, parent, name=key, value=value, att_dict={})
+
+def _add_meta_xml_element(doc, parent, meta_dict):
+    '''
+    assert key != u'meta':
             if 'datatype' not in ca:
                 dsv = _OT_META_PROP_TO_DATATYPE.get(ca.get('property'))
                 if dsv is None:
                     dsv = _python_instance_to_nexml_meta_datatype(cd)
                 ca['datatype'] = dsv
             cel = _create_sub_el(doc, parent, u'meta', ca, cd)
+    '''
+    if not meta_dict:
+        return
+    meta_el = _create_sub_el(doc, parent, 'meta', None, None)
+    for key, value in meta_dict.items():
+        if isinstance(value, list):
+            for el in value:
+                _add_meta_value_to_xml_doc(doc, meta_el, key, el)
         else:
-            cel = _create_sub_el(doc, parent, key, ca, cd)
-        _add_ET_subtree(doc, cel, cc, key_order)
+            _add_meta_value_to_xml_doc(doc, meta_el, key, value)
 
-def _add_ET_subtree(doc, parent, children_dict, key_order=None):
+def _add_child_list_to_xml_doc_subtree(doc, parent, child_list, key, key_order):
+    if not isinstance(child_list, list):
+        child_list = [child_list]
+    for child in child_list:
+        ca, cd, cc, mc = _break_keys_by_hbf_type(child)
+        cel = _create_sub_el(doc, parent, key, ca, cd)
+        _add_meta_xml_element(doc, cel, mc)
+        _add_xml_doc_subtree(doc, cel, cc, key_order)
+
+def _add_xml_doc_subtree(doc, parent, children_dict, key_order=None):
     written = set()
     if key_order:
         for t in key_order:
@@ -438,13 +500,13 @@ def _add_ET_subtree(doc, parent, children_dict, key_order=None):
             if k in children_dict:
                 child_list = children_dict[k]
                 written.add(k)
-                _add_child_list_to_ET_subtree(doc, parent, child_list, k, next_order_el)
+                _add_child_list_to_xml_doc_subtree(doc, parent, child_list, k, next_order_el)
     ksl = children_dict.keys()
     ksl.sort()
     for k in ksl:
         child_list = children_dict[k]
         if k not in written:
-            _add_child_list_to_ET_subtree(doc, parent, child_list, k, None)
+            _add_child_list_to_xml_doc_subtree(doc, parent, child_list, k, None)
 
 
 def _break_keys_by_hbf_type(o):
@@ -456,6 +518,7 @@ def _break_keys_by_hbf_type(o):
     ak = {}
     tk = None
     ck = {}
+    mc = {}
     for k, v in o.items():
         if k.startswith('@'):
             if k == '@xmlns':
@@ -468,9 +531,12 @@ def _break_keys_by_hbf_type(o):
                 ak[s] = unicode(v)
         elif k == '$':
             tk = v
+        elif k.startswith('^'):
+            s = k[1:]
+            mc[s] = v
         else:
             ck[k] = v
-    return ak, tk, ck
+    return ak, tk, ck, mc
 
 def get_ot_study_info_from_nexml(src, encoding=u'utf8'):
     '''Converts an XML doc to JSON using the honeybadgerfish convention (see to_honeybadgerfish_dict)
@@ -504,7 +570,7 @@ def _nex_obj_2_nexml_doc(doc, obj_dict, root_atts=None):
     assert(len(base_keys) == 1)
     root_name = base_keys[0]
     root_obj = obj_dict[root_name]
-    atts, data, children = _break_keys_by_hbf_type(root_obj)
+    atts, data, children, meta_children = _break_keys_by_hbf_type(root_obj)
     atts['generator'] = 'org.opentreeoflife.api.nexonvalidator.json2xml'
     if not 'version' in atts:
         atts['version'] = '0.9'
@@ -512,6 +578,7 @@ def _nex_obj_2_nexml_doc(doc, obj_dict, root_atts=None):
         for k, v in root_atts.items():
             atts[k] = v
     r = _create_sub_el(doc, doc, root_name, atts, data)
+    _add_meta_xml_element(doc, r, meta_children)
     nexml_key_order = (('meta', None),
                        ('otus', (('meta', None),
                                  ('otu', None)
@@ -541,7 +608,7 @@ def _nex_obj_2_nexml_doc(doc, obj_dict, root_atts=None):
                                  )
                        )
                       )
-    _add_ET_subtree(doc, r, children, nexml_key_order)
+    _add_xml_doc_subtree(doc, r, children, nexml_key_order)
 
 
 def write_obj_as_nexml(obj_dict, file_obj, addindent='', newl=''):
