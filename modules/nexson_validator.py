@@ -481,19 +481,23 @@ def _add_meta_xml_element(doc, parent, meta_dict):
     '''
     if not meta_dict:
         return
-    meta_el = _create_sub_el(doc, parent, 'meta', None, None)
-    for key, value in meta_dict.items():
+    key_list = meta_dict.keys()
+    key_list.sort()
+    for key in key_list:
+        value = meta_dict[key]
         if isinstance(value, list):
             for el in value:
-                _add_meta_value_to_xml_doc(doc, meta_el, key, el)
+                _add_meta_value_to_xml_doc(doc, parent, key, el)
         else:
-            _add_meta_value_to_xml_doc(doc, meta_el, key, value)
+            _add_meta_value_to_xml_doc(doc, parent, key, value)
 
 def _add_child_list_to_xml_doc_subtree(doc, parent, child_list, key, key_order):
     if not isinstance(child_list, list):
         child_list = [child_list]
     for child in child_list:
         ca, cd, cc, mc = _break_keys_by_hbf_type(child)
+        if ('id' in ca) and ('about' not in ca):
+            ca['about'] = '#' + ca['id']
         cel = _create_sub_el(doc, parent, key, ca, cd)
         _add_meta_xml_element(doc, cel, mc)
         _add_xml_doc_subtree(doc, cel, cc, key_order)
@@ -584,6 +588,8 @@ def _nex_obj_2_nexml_doc(doc, obj_dict, root_atts=None):
     if root_atts:
         for k, v in root_atts.items():
             atts[k] = v
+    if ('id' in atts) and ('about' not in atts):
+        atts['about'] = '#' + atts['id']
     r = _create_sub_el(doc, doc, root_name, atts, data)
     _add_meta_xml_element(doc, r, meta_children)
     nexml_key_order = (('meta', None),
