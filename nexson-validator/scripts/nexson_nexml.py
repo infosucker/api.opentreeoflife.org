@@ -2,53 +2,62 @@
 from nexson_validator import get_ot_study_info_from_nexml, write_obj_as_nexml
 #secret#hacky#cut#paste*nexson_nexml.py##################################
 
-if __name__ == '__main__':
+def _main():
     import sys, codecs, json, os
-    _HELP_MESSAGE = '''nexml_nexson converter. Expects an input filepath and optional ouputfilepath:
+    import argparse
+    from cStringIO import StringIO
+    _HELP_MESSAGE = '''NeXML/NexSON converter'''
+    _EPILOG = '''UTF-8 encoding is used (for input and output).
 
-nexml_nexson.py <input_filepath> [output_filepath]
-
-If no output_filepath is specified, standard output will be used.
-
-UTF-8 encoding is used (for input and output)
-
-Environmental variables NEXSON_INDENTATION_SETTING and NEXML_INDENTATION_SETTING set the
-    indentation level (default is 0).
-'''
-    try:
-        inpfn = sys.argv[1]
-    except:
-        sys.exit(_HELP_MESSAGE)
-    
-    if inpfn.lower() in ['-h', '-help', '--help']:
-        sys.exit(_HELP_MESSAGE)
-    
-    outfn = None
-    if len(sys.argv) > 2:
-        outfn = sys.argv[2]
-        if len(sys.argv) != 3:
-            sys.exit(_HELP_MESSAGE)
-
+Environmental variables used:
+    NEXSON_INDENTATION_SETTING indentation in NexSON (default 0)
+    NEXML_INDENTATION_SETTING indentation in NeXML (default is 0).
+    {l} logging setting: NotSet, Debug, Warn, Info, Error
+    {f} format string for logging messages.
+'''.format(l=_LOGGING_LEVEL_ENVAR, f=_LOGGING_FORMAT_ENVAR)
+    parser = argparse.ArgumentParser(description=_HELP_MESSAGE,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog=_EPILOG)
+    parser.add_argument("input", help="filepath to input")
+    parser.add_argument("-o", "--output", 
+                        metavar="FILE",
+                        required=False,
+                        help="output filepath. Standard output is used if omitted.")
+    codes = 'xjb'
+    parser.add_argument("-m", "--mode", 
+                        metavar="MODE",
+                        required=False,
+                        choices=[i + j for i in codes for j in codes],
+                        help="Two letter code for {input}{output} \
+                               The letters are x for NeXML, j for NexSON, \
+                               and b for BadgerFish JSON version of NexML. \
+                               The default behavior is to autodetect the format \
+                               and convert JSON to NeXML or NeXML to NexSON.")
+    args = parser.parse_args()
+    inpfn = args.input
+    outfn = args.output
+    mode = args.mode
     try:
         inp = codecs.open(inpfn, mode='rU', encoding='utf-8')
     except:
         sys.exit('nexson_nexml: Could not open file "{fn}"\n'.format(fn=inpfn))
-    try:
-        while True:
-            first_graph_char = inp.read(1).strip()
-            if first_graph_char == '<':
-                mode = 'xj'
-                break
-            elif first_graph_char in '{[':
-                mode = 'jx'
-                break
-            elif first_graph_char:
-                raise ValueError('Expecting input to start with <, {, or [')
-    except:
-        sys.exit('nexson_nexml: First character of "{fn}" was not <, {, or [\nInput does not appear to be NeXML or NexSON\n'.format(fn=inpfn))
-    inp.seek(0)
+    if mode is None:
+        try:
+            while True:
+                first_graph_char = inp.read(1).strip()
+                if first_graph_char == '<':
+                    mode = 'xj'
+                    break
+                elif first_graph_char in '{[':
+                    mode = '*x'
+                    break
+                elif first_graph_char:
+                    raise ValueError('Expecting input to start with <, {, or [')
+        except:
+            sys.exit('nexson_nexml: First character of "{fn}" was not <, {, or [\nInput does not appear to be NeXML or NexSON\n'.format(fn=inpfn))
+        inp.seek(0)
     
-    if mode == 'xj':
+    if mode.endswith('j'):
         indentation = int(os.environ.get('NEXSON_INDENTATION_SETTING', 0))
     else:
         indentation = int(os.environ.get('NEXML_INDENTATION_SETTING', 0))
@@ -61,15 +70,54 @@ Environmental variables NEXSON_INDENTATION_SETTING and NEXML_INDENTATION_SETTING
     else:
         out = codecs.getwriter('utf-8')(sys.stdout)
 
-    if mode == 'xj':
-        blob = get_ot_study_info_from_nexml(inp)
-        json.dump(blob, out, indent=indentation, sort_keys=True)
-        out.write('\n')
+    if mode.endswith('b'):
+        out_nexson_format = BADGER_FISH_NEXSON_VERSION
+    else:
+        out_nexson_format = NEXSON_VERSION
+    if mode.startswith('x'):
+        blob = get_ot_study_info_from_nexml(inp,
+                                            nexson_syntax_version=out_nexson_format)
     else:
         blob = json.load(inp)
+        if mode.startswith('*'):
+            n = blob.get('nex:nexml')
+            if not n or (not isinstance(n, dict)):
+                sys.exit('No top level "nex:nexml" element found. Document does not appear to be a JSON version of NeXML\n')
+            if n:
+                v = n.get('@nexml2json', '0.0.0')
+                if v.startswith('0'):
+                    mode = 'b' + mode[1]
+                else:
+                    mode = 'j' + mode[1]
+
+    if mode.endswith('x'):
+        syntax_version = BADGER_FISH_NEXSON_VERSION
+        if mode.startswith('j'):
+            syntax_version = NEXSON_VERSION
         if indentation > 0:
             indent = ' '*indentation
         else:
             indent = ''
         newline = '\n'
-        write_obj_as_nexml(blob, out, addindent=indent, newl=newline)
+        write_obj_as_nexml(blob,
+                           out,
+                           addindent=indent,
+                           newl=newline,
+                           nexson_syntax_version=syntax_version)
+    else:
+        if not mode.startswith('x'):
+            xo = StringIO()
+            write_obj_as_nexml(blob,
+                           xo,
+                           addindent=' ',
+                           newl='\n',
+                           nexson_syntax_version=out_nexson_format)
+            xml_content = xo.getvalue()
+            xi = StringIO(xml_content)
+            blob = get_ot_study_info_from_nexml(xi,
+                    nexson_syntax_version=out_nexson_format)
+        json.dump(blob, out, indent=indentation, sort_keys=True)
+        out.write('\n')
+
+if __name__ == '__main__':
+    _main()
