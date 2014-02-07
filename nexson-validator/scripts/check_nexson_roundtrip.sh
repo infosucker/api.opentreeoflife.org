@@ -22,7 +22,7 @@ then
     fi
 fi
 # 1. to NeXML
-if ! python "$dir/nexson_nexml.py" "${inpnexson}" .1.xml
+if ! python "$dir/nexson_nexml.py" "${inpnexson}" -m jx -o .1.xml
 then
     echo "Conversion of \"${inpnexson}\" to JSON failed"
     exit 1
@@ -43,7 +43,7 @@ fi
 
 
 # 3. Convert to back to JSON
-if ! python "$dir/nexson_nexml.py" .1.xml .2.json
+if ! python "$dir/nexson_nexml.py" .1.xml -m xj -o .2.json
 then
     echo "Conversion of .1.xml to JSON failed"
     exit 1

@@ -1,10 +1,10 @@
 #!/bin/sh
 total=0
 passed=0
-for f in $(ls tests/nexson/*.nexson)
+for f in $(ls tests/nexson/*.json)
 do
     total=$(expr $total + 1)
-    if sh scripts/check_nexson_roundtrip.sh "$f" "${NEXML_SCHEMA}" -o
+    if sh scripts/check_nexson_roundtrip.sh "$f" -o
     then
         passed=$(expr $passed + 1)
     fi

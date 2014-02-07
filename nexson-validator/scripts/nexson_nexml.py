@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-from nexson_validator import get_ot_study_info_from_nexml, write_obj_as_nexml
+from nexson_validator import get_ot_study_info_from_nexml, write_obj_as_nexml, \
+        NEXSON_VERSION, BADGER_FISH_NEXSON_VERSION
 #secret#hacky#cut#paste*nexson_nexml.py##################################
 
 def _main():
@@ -12,9 +13,9 @@ def _main():
 Environmental variables used:
     NEXSON_INDENTATION_SETTING indentation in NexSON (default 0)
     NEXML_INDENTATION_SETTING indentation in NeXML (default is 0).
-    {l} logging setting: NotSet, Debug, Warn, Info, Error
-    {f} format string for logging messages.
-'''.format(l=_LOGGING_LEVEL_ENVAR, f=_LOGGING_FORMAT_ENVAR)
+    NEXSON_LOGGING_LEVEL logging setting: NotSet, Debug, Warn, Info, Error
+    NEXSON_LOGGING_FORMAT format string for logging messages.
+'''
     parser = argparse.ArgumentParser(description=_HELP_MESSAGE,
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      epilog=_EPILOG)

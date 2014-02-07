@@ -1,7 +1,7 @@
 #!/bin/sh
 total=0
 passed=0
-for f in $(ls tests/nexml/*.xml)
+for f in $(ls tests/nexml/otu.xml)
 do
    total=$(expr $total + 1)
    if sh scripts/check_nexml_roundtrip.sh "$f" -o
