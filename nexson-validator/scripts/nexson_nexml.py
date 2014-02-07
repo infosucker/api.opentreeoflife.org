@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from nexson_validator import get_ot_study_info_from_nexml, write_obj_as_nexml
+#secret#hacky#cut#paste*nexson_nexml.py##################################
+
 if __name__ == '__main__':
     import sys, codecs, json, os
     _HELP_MESSAGE = '''nexml_nexson converter. Expects an input filepath and optional ouputfilepath:

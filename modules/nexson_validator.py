@@ -12,8 +12,7 @@ import re
 
 VERSION = '0.0.3a'
 
-###############################################################################
-# Code for honeybadgerfish conversion of TreeBase XML to NexSON
+#secret#hacky#cut#paste*nexsonvalidator.py#####################################
 ###############################################################################
 
 ##########################################
@@ -646,7 +645,7 @@ def write_obj_as_nexml(obj_dict, file_obj, addindent='', newl=''):
 
 ################################################################################
 # End of honeybadgerfish...
-################################################################################
+#end#secret#hacky#cut#paste*nexsonvalidator.py##################################
 
 def create_validation_nexson(obj, warning_codes_to_skip, retain_deprecated=True):
     '''Creates a validatation logger and then creates an object of type NexSON
