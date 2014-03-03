@@ -3,7 +3,7 @@ _study_index_lock = Lock()
 _study_index = None
 
 def _initialize_study_index(repo_dir):
-    d = {} # Key is study id, value is repo,dir tuple
+    d = {} # Key is study full id, value is repo(gitdir),full path tuple
     for root, dirs, files in os.walk("."):      
        for file in files:
          if ".git" not in root:
